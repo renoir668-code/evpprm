@@ -3,6 +3,7 @@ import { Outfit } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/Sidebar";
 import { getSession } from "@/lib/auth";
+import { getDict, getLocale } from "@/lib/i18n";
 
 const outfit = Outfit({ subsets: ["latin"] });
 
@@ -17,6 +18,8 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const session = await getSession();
+  const dict = await getDict();
+  const lang = await getLocale();
 
   return (
     <html lang="en">
@@ -27,7 +30,7 @@ export default async function RootLayout({
         <div className="absolute top-[20%] right-[10%] w-[30%] h-[30%] rounded-full bg-emerald-200/30 blur-[100px] mix-blend-multiply pointer-events-none" />
 
         <div className="relative z-10 p-6 flex h-screen w-full gap-6">
-          <Sidebar userName={session?.name as string | undefined} userRole={session?.role as string | undefined} />
+          <Sidebar userName={session?.name as string | undefined} userRole={session?.role as string | undefined} dict={dict} initialLang={lang} />
           <main className="flex-1 glass rounded-[32px] overflow-y-auto p-10 relative shadow-2xl border-white/60 scroll-smooth">
             <div className="max-w-6xl mx-auto h-full">
               {children}
