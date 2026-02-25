@@ -93,28 +93,31 @@ export async function importPartners(data: any[]) {
     const currentPartners = await getPartners();
 
     for (const row of data) {
-        if (!row['Partner Name']) continue;
-        const name = String(row['Partner Name']).trim();
+        if (!row['name']) continue;
+        const name = String(row['name']).trim();
         const existing = currentPartners.find(p => p.name.toLowerCase() === name.toLowerCase());
 
-        const parsedHealth = String(row['Health']);
-        const health = ['Active', 'At Risk', 'Dormant'].includes(parsedHealth) ? parsedHealth : 'Active';
-        const attention = Number(row['Threshold (Days)']) || 30;
-        const vertical = row['Vertical'] ? String(row['Vertical']).trim() : null;
-        const owner = row['Owner'] ? String(row['Owner']).trim() : null;
+        const health = row['health_status'] ? String(row['health_status']).trim() : 'Active';
+        const attention = Number(row['needs_attention_days']) || 30;
+        const vertical = row['vertical'] ? String(row['vertical']).trim() : null;
+        const key_person_id = row['key_person_id'] ? String(row['key_person_id']).trim() : null;
+        const owner_id = row['owner_id'] ? String(row['owner_id']).trim() : null;
+        const use_case = row['use_case'] ? String(row['use_case']).trim() : null;
+        const int_status = row['integration_status'] ? String(row['integration_status']).trim() : 'No';
+        const int_products = row['integration_products'] ? String(row['integration_products']).trim() : '[]';
 
         if (existing) {
             await query(`
                 UPDATE partners 
-                SET health_status = $1, needs_attention_days = $2, vertical = $3, key_person_id = $4
-                WHERE id = $5
-            `, [health, attention, vertical, owner, existing.id]);
+                SET health_status = $1, needs_attention_days = $2, vertical = $3, key_person_id = $4, owner_id = $5, use_case = $6, integration_status = $7, integration_products = $8
+                WHERE id = $9
+            `, [health, attention, vertical, key_person_id, owner_id, use_case, int_status, int_products, existing.id]);
         } else {
             const id = randomUUID();
             await query(`
-                INSERT INTO partners (id, name, health_status, needs_attention_days, vertical, key_person_id, integration_status, integration_products)
-                VALUES ($1, $2, $3, $4, $5, $6, 'No', '[]')
-            `, [id, name, health, attention, vertical, owner]);
+                INSERT INTO partners (id, name, health_status, needs_attention_days, vertical, key_person_id, owner_id, use_case, integration_status, integration_products)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            `, [id, name, health, attention, vertical, key_person_id, owner_id, use_case, int_status, int_products]);
         }
     }
     revalidatePath('/');

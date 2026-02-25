@@ -75,11 +75,15 @@ export default function PartnerList({
     };
 
     const downloadTemplate = () => {
-        const headers = [['Partner Name', 'Health', 'Threshold (Days)', 'Vertical', 'Owner']];
-        const ws = xlsx.utils.aoa_to_sheet(headers);
-        const wb = xlsx.utils.book_new();
-        xlsx.utils.book_append_sheet(wb, ws, 'Template');
-        xlsx.writeFile(wb, 'Partner_Import_Template.xlsx');
+        const headers = ['name', 'health_status', 'integration_status', 'integration_products', 'key_person_id', 'needs_attention_days', 'owner_id', 'vertical', 'use_case'];
+        const csvContent = "data:text/csv;charset=utf-8," + headers.join(",");
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "partner_import_template.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -167,7 +171,7 @@ export default function PartnerList({
 
                     <input
                         type="file"
-                        accept=".xlsx, .xls"
+                        accept=".csv, .xlsx, .xls"
                         ref={fileInputRef}
                         className="hidden"
                         onChange={handleImport}
@@ -177,7 +181,7 @@ export default function PartnerList({
                         onClick={() => fileInputRef.current?.click()}
                         disabled={isImporting}
                         className="bg-white/60 hover:bg-white text-slate-700 hover:text-indigo-600 px-4 py-3 rounded-xl flex items-center gap-2 font-bold shadow-sm transition-all border border-white hover:shadow-md disabled:opacity-50"
-                        title="Import XLSX"
+                        title="Import CSV/XLSX"
                     >
                         {isImporting ? <Loader2 className="w-5 h-5 animate-spin" /> : <UploadCloud className="w-5 h-5" />}
                         <span className="hidden sm:inline">Import</span>
