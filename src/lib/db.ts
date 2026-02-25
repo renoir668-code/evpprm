@@ -7,12 +7,9 @@ const pool = new Pool({
 });
 
 let isInitialized = false;
+let initPromise: Promise<void> | null = null;
 
-// We export query to use directly from pg
-export const query = (text: string, params?: any[]) => pool.query(text, params);
-export const getClient = () => pool.connect();
-
-export async function initDb() {
+export async function initDb(): Promise<void> {
   if (isInitialized) return;
 
   const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
@@ -130,5 +127,23 @@ export async function initDb() {
   }
 }
 
-// CallinitDb once it loads, it will handle if no DB url provided
-initDb().catch(console.error);
+export function ensureDb() {
+  if (!initPromise) {
+    initPromise = initDb();
+  }
+  return initPromise;
+}
+
+// We export query to use directly from pg, wrapping it to ensure db is ready
+export const query = async (text: string, params?: any[]) => {
+  await ensureDb();
+  return pool.query(text, params);
+};
+
+export const getClient = async () => {
+  await ensureDb();
+  return pool.connect();
+};
+
+// Fire it off immediately just in case
+ensureDb().catch(console.error);
