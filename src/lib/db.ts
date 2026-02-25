@@ -3,7 +3,7 @@ import * as bcrypt from 'bcrypt';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
+  ssl: { rejectUnauthorized: false },
 });
 
 let isInitialized = false;
@@ -15,8 +15,9 @@ export const getClient = () => pool.connect();
 export async function initDb() {
   if (isInitialized) return;
 
-  if (!process.env.DATABASE_URL) {
-    console.warn("DATABASE_URL is not set. Please provide a connection string for Supabase or Vercel Postgres.");
+  const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  if (!connectionString) {
+    console.warn("DATABASE_URL or POSTGRES_URL is not set. Please provide a connection string.");
     return;
   }
 
