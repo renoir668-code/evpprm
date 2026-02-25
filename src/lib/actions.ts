@@ -70,6 +70,39 @@ export async function updatePartner(id: string, data: Partial<Partner>) {
     revalidatePath(`/partners/${id}`);
 }
 
+export async function importPartners(data: any[]) {
+    const currentPartners = await getPartners();
+
+    for (const row of data) {
+        if (!row['Partner Name']) continue;
+        const name = String(row['Partner Name']).trim();
+        const existing = currentPartners.find(p => p.name.toLowerCase() === name.toLowerCase());
+
+        const parsedHealth = String(row['Health']);
+        const health = ['Active', 'At Risk', 'Dormant'].includes(parsedHealth) ? parsedHealth : 'Active';
+        const attention = Number(row['Threshold (Days)']) || 30;
+        const vertical = row['Vertical'] ? String(row['Vertical']).trim() : null;
+        const owner = row['Owner'] ? String(row['Owner']).trim() : null;
+
+        if (existing) {
+            await query(`
+                UPDATE partners 
+                SET health_status = $1, needs_attention_days = $2, vertical = $3, key_person_id = $4
+                WHERE id = $5
+            `, [health, attention, vertical, owner, existing.id]);
+        } else {
+            const id = randomUUID();
+            await query(`
+                INSERT INTO partners (id, name, health_status, needs_attention_days, vertical, key_person_id, integration_status, integration_products)
+                VALUES ($1, $2, $3, $4, $5, $6, 'No', '[]')
+            `, [id, name, health, attention, vertical, owner]);
+        }
+    }
+    revalidatePath('/');
+    revalidatePath('/directory');
+    revalidatePath('/analytics');
+}
+
 // --- CONTACTS ---
 
 export async function getContacts(partnerId: string): Promise<Contact[]> {
