@@ -1,65 +1,212 @@
-import Image from "next/image";
+import { getPartners, getInteractions, getCustomReminders, getRecentInteractions } from '@/lib/actions';
+import { Users, AlertTriangle, CheckCircle, Handshake, ArrowRight, Calendar, MessageSquare, Clock, Phone, Mail } from 'lucide-react';
+import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
-export default function Home() {
+export default async function Dashboard() {
+  const partners = await getPartners();
+
+  const totalPartners = partners.length;
+  const activeCollaborations = partners.filter(p => p.health_status === 'Active').length;
+
+  // Calculate partners needing attention
+  const now = new Date();
+  const needingAttention = [];
+
+  for (const p of partners) {
+    if (p.health_status === 'Dormant') continue; // Usually dormant don't need attention
+
+    const interactions = await getInteractions(p.id);
+    const lastInteraction = interactions[0]; // ordered by date DESC
+
+    let daysSinceLast = Infinity;
+    if (lastInteraction) {
+      const lastDate = new Date(lastInteraction.date);
+      daysSinceLast = Math.floor((now.getTime() - lastDate.getTime()) / (1000 * 3600 * 24));
+    }
+
+    if (daysSinceLast > p.needs_attention_days) {
+      needingAttention.push({
+        partner: p,
+        daysSinceLast: daysSinceLast === Infinity ? 'Never' : daysSinceLast
+      });
+    }
+  }
+
+  const customReminders = await getCustomReminders();
+  const nextAppointments = customReminders.slice(0, 5);
+  const recentInteractions = await getRecentInteractions(5);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700 ease-out pb-8">
+      <div className="relative">
+        <div className="absolute -inset-4 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-3xl blur-2xl -z-10" />
+        <h1 className="text-5xl font-extrabold tracking-tight text-slate-900 drop-shadow-sm">Dashboard</h1>
+        <p className="text-slate-500 mt-3 text-lg font-medium">Overview of your partner ecosystem.</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="glass-card rounded-[24px] p-6 group relative z-0">
+          <div className="glow-indigo" />
+          <div className="flex items-center justify-between relative z-10">
+            <h3 className="text-slate-500 font-bold tracking-wider uppercase text-xs">Total Partners</h3>
+            <div className="bg-indigo-50 p-3 rounded-2xl group-hover:bg-indigo-100 group-hover:scale-110 transition-all duration-300 shadow-sm">
+              <Users className="text-indigo-600 w-6 h-6" />
+            </div>
+          </div>
+          <p className="text-5xl font-extrabold mt-6 text-slate-800 group-hover:text-indigo-600 transition-colors duration-300 relative z-10 drop-shadow-sm">{totalPartners}</p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="glass-card rounded-[24px] p-6 group relative z-0">
+          <div className="glow-emerald" />
+          <div className="flex items-center justify-between relative z-10">
+            <h3 className="text-slate-500 font-bold tracking-wider uppercase text-xs">Active Collaborations</h3>
+            <div className="bg-emerald-50 p-3 rounded-2xl group-hover:bg-emerald-100 group-hover:scale-110 transition-all duration-300 shadow-sm">
+              <CheckCircle className="text-emerald-500 w-6 h-6" />
+            </div>
+          </div>
+          <p className="text-5xl font-extrabold mt-6 text-slate-800 group-hover:text-emerald-500 transition-colors duration-300 relative z-10 drop-shadow-sm">{activeCollaborations}</p>
         </div>
-      </main>
+
+        <div className="glass-card rounded-[24px] p-6 group relative z-0">
+          <div className="glow-amber" />
+          <div className="flex items-center justify-between relative z-10">
+            <h3 className="text-slate-500 font-bold tracking-wider uppercase text-xs">Needs Attention</h3>
+            <div className="bg-amber-50 p-3 rounded-2xl group-hover:bg-amber-100 group-hover:scale-110 transition-all duration-300 shadow-sm">
+              <AlertTriangle className="text-amber-500 w-6 h-6" />
+            </div>
+          </div>
+          <p className="text-5xl font-extrabold mt-6 text-slate-800 group-hover:text-amber-500 transition-colors duration-300 relative z-10 drop-shadow-sm">{needingAttention.length}</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+        <div className="glass-card rounded-[32px] overflow-hidden relative border border-white/60 flex flex-col">
+          <div className="px-6 py-5 border-b border-white/40 flex items-center gap-3 bg-white/30 backdrop-blur-md">
+            <div className="p-2.5 bg-indigo-100/80 rounded-xl text-indigo-600 shadow-sm">
+              <Calendar className="w-5 h-5" />
+            </div>
+            <h2 className="text-xl font-extrabold text-slate-800">Next Appointments</h2>
+          </div>
+          <div className="divide-y divide-white/40 bg-white/10 flex-1">
+            {nextAppointments.length === 0 ? (
+              <div className="py-12 text-center text-slate-500 font-medium">No upcoming appointments.</div>
+            ) : (
+              nextAppointments.map(app => {
+                const partner = partners.find(p => p.id === app.partner_id);
+                return (
+                  <div key={app.id} className="px-6 py-4 flex items-center gap-4 hover:bg-white/50 transition-colors">
+                    <div className="w-10 h-10 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0">
+                      <span className="text-indigo-600 font-bold text-sm">{partner ? partner.name.charAt(0).toUpperCase() : '?'}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-slate-800 font-bold truncate">{app.title}</p>
+                      <div className="flex items-center gap-1.5 mt-0.5 text-xs font-medium text-slate-500">
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>{new Date(app.due_date).toLocaleDateString()}</span>
+                        {partner && (
+                          <>
+                            <span className="text-slate-300">•</span>
+                            <span className="truncate">{partner.name}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <Link href={`/reminders`} className="text-slate-400 hover:text-indigo-600 transition-colors">
+                      <ArrowRight className="w-5 h-5" />
+                    </Link>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        <div className="glass-card rounded-[32px] overflow-hidden relative border border-white/60 flex flex-col">
+          <div className="px-6 py-5 border-b border-white/40 flex items-center gap-3 bg-white/30 backdrop-blur-md">
+            <div className="p-2.5 bg-emerald-100/80 rounded-xl text-emerald-600 shadow-sm">
+              <MessageSquare className="w-5 h-5" />
+            </div>
+            <h2 className="text-xl font-extrabold text-slate-800">Last Interactions</h2>
+          </div>
+          <div className="divide-y divide-white/40 bg-white/10 flex-1">
+            {recentInteractions.length === 0 ? (
+              <div className="py-12 text-center text-slate-500 font-medium">No recent interactions.</div>
+            ) : (
+              recentInteractions.map(interaction => (
+                <div key={interaction.id} className="px-6 py-4 flex items-start gap-4 hover:bg-white/50 transition-colors group">
+                  <div className="mt-1 p-2 rounded-xl bg-slate-50 border border-slate-100 text-slate-500 shrink-0">
+                    {interaction.type === 'call' ? <Phone className="w-4 h-4" /> :
+                      interaction.type === 'meeting' ? <Calendar className="w-4 h-4" /> :
+                        <Mail className="w-4 h-4" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-0.5">
+                      <Link href={`/partners/${interaction.partner_id}`} className="text-slate-800 font-bold truncate group-hover:text-emerald-600 transition-colors">
+                        {interaction.partner_name}
+                      </Link>
+                      <span className="text-xs font-medium text-slate-400 whitespace-nowrap ml-2">
+                        {new Date(interaction.date).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p className="text-sm text-slate-500 line-clamp-2">{interaction.notes}</p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+      </div>
+
+      <div className="glass-card rounded-[32px] overflow-hidden relative border border-white/60">
+        <div className="px-8 py-6 border-b border-white/40 flex items-center justify-between bg-white/30 backdrop-blur-md">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-amber-100/80 rounded-xl text-amber-600 shadow-sm">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+            <h2 className="text-xl font-extrabold text-slate-800">Partners Needing Attention</h2>
+          </div>
+          <span className="text-sm font-bold bg-amber-100 text-amber-800 px-4 py-1.5 rounded-full shadow-sm border border-amber-200/50">
+            {needingAttention.length} pending
+          </span>
+        </div>
+
+        {needingAttention.length === 0 ? (
+          <div className="px-8 py-20 text-center text-slate-500 flex flex-col items-center justify-center bg-white/10">
+            <div className="bg-emerald-50 w-24 h-24 rounded-full flex items-center justify-center mb-6 shadow-inner ring-8 ring-white/50">
+              <CheckCircle className="w-12 h-12 text-emerald-500" />
+            </div>
+            <p className="text-2xl font-extrabold text-slate-800">All caught up!</p>
+            <p className="text-base font-medium mt-2 text-slate-500">No partners currently require immediate attention.</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-white/40 bg-white/10">
+            {needingAttention.map(({ partner, daysSinceLast }) => (
+              <div key={partner.id} className="px-8 py-6 flex items-center justify-between hover:bg-white/50 transition-all duration-300 group cursor-pointer hover:pl-10">
+                <div>
+                  <Link href={`/partners/${partner.id}`} className="text-xl font-bold text-slate-800 group-hover:text-indigo-600 transition-colors drop-shadow-sm">
+                    {partner.name}
+                  </Link>
+                  <p className="text-sm font-medium text-slate-500 mt-2 flex items-center gap-2">
+                    <span>Last interaction:</span>
+                    <span className="text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded-md">{daysSinceLast} days ago</span>
+                    <span className="text-slate-300 mx-1">•</span>
+                    <span>Threshold: <span className="text-slate-700 font-bold">{partner.needs_attention_days} days</span></span>
+                  </p>
+                </div>
+                <Link
+                  href={`/partners/${partner.id}`}
+                  className="p-3 bg-white shadow-sm text-slate-400 hover:text-indigo-600 hover:shadow-lg hover:scale-110 rounded-2xl transition-all duration-300 opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0"
+                >
+                  <ArrowRight className="w-6 h-6" />
+                </Link>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

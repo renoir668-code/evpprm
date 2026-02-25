@@ -1,0 +1,132 @@
+import { Pool } from 'pg';
+import * as bcrypt from 'bcrypt';
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
+});
+
+let isInitialized = false;
+
+// We export query to use directly from pg
+export const query = (text: string, params?: any[]) => pool.query(text, params);
+export const getClient = () => pool.connect();
+
+export async function initDb() {
+  if (isInitialized) return;
+
+  if (!process.env.DATABASE_URL) {
+    console.warn("DATABASE_URL is not set. Please provide a connection string for Supabase or Vercel Postgres.");
+    return;
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // Create Tables
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        role TEXT DEFAULT 'User',
+        password_hash TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS partners (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        health_status TEXT DEFAULT 'Active',
+        integration_status TEXT DEFAULT 'No',
+        integration_products TEXT,
+        key_person_id TEXT,
+        needs_attention_days INTEGER DEFAULT 30,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        owner_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+        vertical TEXT,
+        use_case TEXT
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS tags (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        color TEXT NOT NULL
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS partner_tags (
+        partner_id TEXT REFERENCES partners(id) ON DELETE CASCADE,
+        tag_id TEXT REFERENCES tags(id) ON DELETE CASCADE,
+        PRIMARY KEY (partner_id, tag_id)
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS contacts (
+        id TEXT PRIMARY KEY,
+        partner_id TEXT NOT NULL REFERENCES partners(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        email TEXT,
+        role TEXT
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS interactions (
+        id TEXT PRIMARY KEY,
+        partner_id TEXT NOT NULL REFERENCES partners(id) ON DELETE CASCADE,
+        date TIMESTAMP NOT NULL,
+        notes TEXT,
+        type TEXT,
+        attachments TEXT DEFAULT '[]'
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS settings (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS custom_reminders (
+        id TEXT PRIMARY KEY,
+        partner_id TEXT NOT NULL REFERENCES partners(id) ON DELETE CASCADE,
+        title TEXT NOT NULL,
+        due_date TIMESTAMP NOT NULL,
+        completed INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        completed_at TIMESTAMP
+      )
+    `);
+
+    // Add default admin if users is empty
+    const res = await client.query('SELECT COUNT(*) FROM users');
+    if (parseInt(res.rows[0].count, 10) === 0) {
+      const defaultHash = "$2b$10$wE0p56q5nWgH5yKjSBYzPe6l.K74hLdY3Qc4H11P8C2A028tq4lG.";
+      await client.query(`
+        INSERT INTO users (id, name, email, role, password_hash)
+        VALUES ($1, $2, $3, $4, $5)
+      `, ['admin-1', 'System Admin', 'admin@evp-prm.com', 'Admin', defaultHash]);
+    }
+
+    await client.query('COMMIT');
+    isInitialized = true;
+    console.log('PostgreSQL Database initialized via Supabase/Vercel URL');
+  } catch (e) {
+    await client.query('ROLLBACK');
+    console.error("Migration error:", e);
+  } finally {
+    client.release();
+  }
+}
+
+// CallinitDb once it loads, it will handle if no DB url provided
+initDb().catch(console.error);
