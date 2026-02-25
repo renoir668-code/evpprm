@@ -1,9 +1,8 @@
-import { Pool } from 'pg';
+import { createPool } from '@vercel/postgres';
 import * as bcrypt from 'bcrypt';
 
-const pool = new Pool({
+const pool = createPool({
   connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
-  ssl: { rejectUnauthorized: false },
 });
 
 let isInitialized = false;
@@ -136,7 +135,7 @@ export function ensureDb() {
   return initPromise;
 }
 
-// We export query to use directly from pg, wrapping it to ensure db is ready
+// We export query to use directly from the Vercel pool, wrapping it to ensure db is ready
 export const query = async (text: string, params?: any[]) => {
   await ensureDb();
   return pool.query(text, params);
