@@ -1,0 +1,24 @@
+From ffbd78b69589d12831be098531d4ebab422b4837 Mon Sep 17 00:00:00 2001
+From: pagabtc <Pagabtc@proton.me>
+Date: Wed, 25 Feb 2026 03:30:39 +0000
+Subject: [PATCH] chore: add dist to gitignore
+
+---
+ .gitignore | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/.gitignore b/.gitignore
+index 5ef6a52..6470c23 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -1,5 +1,7 @@
+ # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+ 
++dist/
++
+ # dependencies
+ /node_modules
+ /.pnp
+-- 
+2.45.1.windows.1
+
