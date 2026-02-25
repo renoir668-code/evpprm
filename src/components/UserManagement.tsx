@@ -49,7 +49,7 @@ export default function UserManagement({ initialUsers }: { initialUsers: User[] 
                         <input required type="text" placeholder="Full Name" value={name} onChange={e => setName(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 text-sm" />
                     </div>
                     <div>
-                        <input required type="email" placeholder="Email Address" value={email} onChange={e => setEmail(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 text-sm" />
+                        <input required type="text" placeholder="Username or Email" value={email} onChange={e => setEmail(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 text-sm" />
                     </div>
                     <div>
                         <select value={role} onChange={e => setRole(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 text-sm bg-white">
