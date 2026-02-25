@@ -55,20 +55,17 @@ export async function updatePartnerProducts(id: string, integration_products: st
 }
 
 export async function deletePartner(id: string) {
-    const client = await getClient();
+    console.log("Starting deletion of partner:", id);
     try {
-        await client.query('BEGIN');
-        await client.query('DELETE FROM interactions WHERE partner_id = $1', [id]);
-        await client.query('DELETE FROM contacts WHERE partner_id = $1', [id]);
-        await client.query('DELETE FROM custom_reminders WHERE partner_id = $1', [id]);
-        await client.query('DELETE FROM partner_tags WHERE partner_id = $1', [id]);
-        await client.query('DELETE FROM partners WHERE id = $1', [id]);
-        await client.query('COMMIT');
-    } catch (e) {
-        await client.query('ROLLBACK');
-        throw e;
-    } finally {
-        client.release();
+        await query('DELETE FROM interactions WHERE partner_id = $1', [id]);
+        await query('DELETE FROM contacts WHERE partner_id = $1', [id]);
+        await query('DELETE FROM custom_reminders WHERE partner_id = $1', [id]);
+        await query('DELETE FROM partner_tags WHERE partner_id = $1', [id]);
+        await query('DELETE FROM partners WHERE id = $1', [id]);
+        console.log("Successfully deleted partner:", id);
+    } catch (err: any) {
+        console.error("Error in deletePartner:", err);
+        throw new Error("Database error occurred while deleting partner.");
     }
     revalidatePath('/');
     revalidatePath('/directory');
