@@ -54,6 +54,14 @@ export async function updatePartnerProducts(id: string, integration_products: st
     revalidatePath('/analytics');
 }
 
+export async function deletePartner(id: string) {
+    await query('DELETE FROM partners WHERE id = $1', [id]);
+    revalidatePath('/');
+    revalidatePath('/directory');
+    revalidatePath('/analytics');
+    revalidatePath('/pipeline');
+}
+
 export async function updatePartner(id: string, data: Partial<Partner>) {
     const current = await getPartner(id);
     if (!current) throw new Error('Partner not found');

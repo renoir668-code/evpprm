@@ -1,10 +1,13 @@
 import { getPartners, getTags, getPartnerTags, getSettings } from '@/lib/actions';
 import { Partner, Tag } from '@/lib/types';
 import PartnerList from '@/components/PartnerList';
-
+import { getSession } from '@/lib/auth';
 export type PartnerWithTags = Partner & { tags: Tag[] };
 
 export default async function DirectoryPage() {
+    const session = await getSession();
+    const isAdmin = session?.role === 'Admin';
+
     const partners = await getPartners();
     const tags = await getTags();
     const settings = await getSettings();
@@ -28,7 +31,13 @@ export default async function DirectoryPage() {
                 <p className="text-slate-500 mt-2">Browse and manage all your partnerships.</p>
             </div>
 
-            <PartnerList initialPartners={partnersWithTags} allTags={tags} availableProducts={availableProducts} availableTeam={availableTeam} />
+            <PartnerList
+                initialPartners={partnersWithTags}
+                allTags={tags}
+                availableProducts={availableProducts}
+                availableTeam={availableTeam}
+                isAdmin={isAdmin}
+            />
         </div>
     );
 }
