@@ -201,14 +201,14 @@ export default function PartnerList({
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-6">
-                                        <div className="hidden lg:block text-right mr-4">
-                                            <p className="text-sm text-slate-500 font-medium">Last Interaction</p>
-                                            <p className="text-sm text-slate-900 font-bold">
+                                    <div className="flex items-center justify-end gap-6 sm:gap-8 w-full md:w-auto">
+                                        <div className="hidden lg:block text-right shrink-0 w-[140px]">
+                                            <p className="text-sm text-slate-500 font-medium whitespace-nowrap">Last Interaction</p>
+                                            <p className="text-sm text-slate-900 font-bold truncate">
                                                 {partner.last_interaction_date ? new Date(partner.last_interaction_date).toLocaleDateString() : 'Never'}
                                             </p>
                                         </div>
-                                        <div className="hidden md:block text-right">
+                                        <div className="hidden md:block text-right shrink-0 w-[150px]">
                                             <p className="text-sm text-slate-500 font-medium">Integrations</p>
                                             <p className="text-sm text-slate-900 line-clamp-1 max-w-[150px]">
                                                 {(() => {
@@ -218,7 +218,7 @@ export default function PartnerList({
                                                 })()}
                                             </p>
                                         </div>
-                                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-slate-200 group-hover:bg-indigo-600 group-hover:border-indigo-600 transition-colors shadow-sm">
+                                        <div className="w-10 h-10 shrink-0 rounded-full flex items-center justify-center bg-white border border-slate-200 group-hover:bg-indigo-600 group-hover:border-indigo-600 transition-colors shadow-sm">
                                             <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-white" />
                                         </div>
                                     </div>
