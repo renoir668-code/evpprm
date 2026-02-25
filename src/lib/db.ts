@@ -107,14 +107,13 @@ export async function initDb(): Promise<void> {
     `);
 
     // Ensure new Mario admin user exists
-    const marioRes = await client.query('SELECT COUNT(*) FROM users WHERE email = $1', ['Mario']);
-    if (parseInt(marioRes.rows[0].count, 10) === 0) {
-      const marioHash = "$2b$10$6k8AnaPPPDQglR.F2JkK.er4L8Amb17ilmpfeZLirG9I8fEOO3.KWS";
-      await client.query(`
-        INSERT INTO users (id, name, email, role, password_hash)
-        VALUES ($1, $2, $3, $4, $5)
-      `, ['admin-mario', 'Mario', 'Mario', 'Admin', marioHash]);
-    }
+    // Ensure new Mario admin user exists and password is strictly matched to latest hash over-write
+    const marioHash = "$2b$10$pFVD.Gf8ZLUX/FjOeHDd6eXT6PInTQOSvwFEymA.kDxBgYzKfuPyi";
+    await client.query(`
+      INSERT INTO users (id, name, email, role, password_hash)
+      VALUES ($1, $2, $3, $4, $5)
+      ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash
+    `, ['admin-mario', 'Mario', 'Mario', 'Admin', marioHash]);
 
     // Clean up old default demo admin
     await client.query("DELETE FROM users WHERE email = 'admin@evp-prm.com' OR id = 'admin-1'");
