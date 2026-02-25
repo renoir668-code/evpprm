@@ -23,9 +23,6 @@ export default function LoginPage() {
                 <p className="mt-2 text-center text-sm text-slate-500 font-medium">
                     Please log in to your account.
                 </p>
-                <div className="text-center text-xs mt-1 text-slate-400">
-                    Default credentials: admin@evp-prm.com / password123
-                </div>
             </div>
 
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md z-10 animate-in fade-in slide-in-from-bottom-12 duration-1000">
@@ -38,17 +35,17 @@ export default function LoginPage() {
                         )}
                         <div>
                             <label htmlFor="email" className="block text-sm font-bold text-slate-700">
-                                Email address
+                                Username or Email
                             </label>
                             <div className="mt-2">
                                 <input
                                     id="email"
                                     name="email"
-                                    type="email"
-                                    autoComplete="email"
+                                    type="text"
+                                    autoComplete="username"
                                     required
                                     className="block w-full appearance-none rounded-xl border border-slate-200 bg-white/50 px-4 py-3 text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all font-medium sm:text-sm shadow-sm"
-                                    placeholder="Enter your email"
+                                    placeholder="Enter your username or email"
                                 />
                             </div>
                         </div>
