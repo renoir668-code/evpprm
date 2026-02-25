@@ -8,7 +8,7 @@ import { Search, Plus, Building2, ChevronRight, Activity, Download, UploadCloud,
 import { cn } from '@/lib/utils';
 import CreatePartnerModal from './CreatePartnerModal';
 import * as xlsx from 'xlsx';
-import { importPartners, deletePartner } from '@/lib/actions';
+import { importPartners } from '@/lib/actions';
 
 export default function PartnerList({
     initialPartners,
@@ -284,20 +284,6 @@ export default function PartnerList({
                                         <div className="w-10 h-10 shrink-0 rounded-full flex items-center justify-center bg-white border border-slate-200 group-hover:bg-indigo-600 group-hover:border-indigo-600 transition-colors shadow-sm">
                                             <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-white" />
                                         </div>
-                                        {isAdmin && (
-                                            <button
-                                                onClick={async (e) => {
-                                                    e.preventDefault();
-                                                    if (confirm('Are you sure you want to delete this partner? This action cannot be undone.')) {
-                                                        await deletePartner(partner.id);
-                                                    }
-                                                }}
-                                                className="w-10 h-10 shrink-0 rounded-full flex items-center justify-center bg-white border border-rose-200 hover:bg-rose-600 hover:border-rose-600 transition-colors shadow-sm text-rose-500 hover:text-white"
-                                                title="Delete Partner"
-                                            >
-                                                <Trash2 className="w-5 h-5" />
-                                            </button>
-                                        )}
                                     </div>
                                 </div>
                             </Link>
