@@ -1,11 +1,17 @@
-import { getPartners, getInteractions, getCustomReminders } from '@/lib/actions';
+import { getPartners, getInteractions, getCustomReminders, getSettings } from '@/lib/actions';
 import Link from 'next/link';
 import { Calendar, AlertCircle, ArrowRight, Clock, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ReminderFilter } from './ReminderFilter';
 
-export default async function RemindersPage() {
+export default async function RemindersPage({ searchParams }: { searchParams: Promise<{ owner?: string }> }) {
+    const params = await searchParams;
+    const owner = params?.owner || '';
     const partners = await getPartners();
     const customRemindersData = await getCustomReminders();
+    const settings = await getSettings();
+    const teamSetting = settings.find((s) => s.key === 'team')?.value || 'Admin, Sales, Support';
+    const availableTeam = teamSetting.split(',').map((s) => s.trim()).filter(Boolean);
 
     const now = new Date();
     const reminders = [];
@@ -14,6 +20,7 @@ export default async function RemindersPage() {
     for (const cr of customRemindersData) {
         const p = partners.find(p => p.id === cr.partner_id);
         if (!p || p.health_status === 'Dormant') continue;
+        if (owner && p.key_person_id !== owner) continue;
 
         const dueDate = new Date(cr.due_date);
         const daysRemaining = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 3600 * 24));
@@ -32,6 +39,7 @@ export default async function RemindersPage() {
 
     for (const p of partners) {
         if (p.health_status === 'Dormant') continue;
+        if (owner && p.key_person_id !== owner) continue;
 
         const interactions = await getInteractions(p.id);
         const lastInteraction = interactions[0];
@@ -67,9 +75,12 @@ export default async function RemindersPage() {
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight text-slate-900">Reminders</h1>
-                <p className="text-slate-500 mt-2">Stay on top of your partner relationships.</p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">Reminders</h1>
+                    <p className="text-slate-500 mt-2">Stay on top of your partner relationships.</p>
+                </div>
+                <ReminderFilter availableTeam={availableTeam} initialOwner={owner} />
             </div>
 
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
