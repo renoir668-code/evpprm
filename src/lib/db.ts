@@ -3,6 +3,7 @@ import * as bcrypt from 'bcrypt';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
 });
 
 let isInitialized = false;
