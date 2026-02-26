@@ -1,4 +1,5 @@
 import { getPartners, getInteractions, getSettings } from '@/lib/actions';
+export const dynamic = 'force-dynamic';
 import { AnalyticsCharts } from './AnalyticsCharts';
 import { Partner, Interaction } from '@/lib/types';
 import { PieChart as PieChartIcon, TrendingUp, Users as UsersIcon, Activity } from 'lucide-react';

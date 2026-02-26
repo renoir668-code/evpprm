@@ -1,4 +1,5 @@
 import { getPartner, getContacts, getInteractions, getPartnerTags, getSettings, getAllCustomReminders } from '@/lib/actions';
+export const dynamic = 'force-dynamic';
 import { notFound } from 'next/navigation';
 import { Activity, Building2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';

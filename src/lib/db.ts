@@ -1,9 +1,21 @@
 import { createPool } from '@vercel/postgres';
 import * as bcrypt from 'bcrypt';
 
-const pool = createPool({
-  connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
-});
+let pool: any = null;
+
+function getPool() {
+  if (!pool) {
+    const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+    if (!connectionString) {
+      // Return a mock or handle it gracefully to allow the build to proceed if this code is reached
+      console.warn("No connection string found for pool.");
+    }
+    pool = createPool({
+      connectionString: connectionString,
+    });
+  }
+  return pool;
+}
 
 let isInitialized = false;
 let initPromise: Promise<void> | null = null;
@@ -17,7 +29,7 @@ export async function initDb(): Promise<void> {
     return;
   }
 
-  const client = await pool.connect();
+  const client = await getPool().connect();
   try {
     await client.query('BEGIN');
 
@@ -138,13 +150,13 @@ export function ensureDb() {
 // We export query to use directly from the Vercel pool, wrapping it to ensure db is ready
 export const query = async (text: string, params?: any[]) => {
   await ensureDb();
-  return pool.query(text, params);
+  return getPool().query(text, params);
 };
 
 export const getClient = async () => {
   await ensureDb();
-  return pool.connect();
+  return getPool().connect();
 };
 
 // Fire it off immediately just in case
-ensureDb().catch(console.error);
+// ensureDb().catch(console.error);

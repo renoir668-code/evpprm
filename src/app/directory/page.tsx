@@ -1,4 +1,5 @@
 import { getPartners, getTags, getPartnerTags, getSettings } from '@/lib/actions';
+export const dynamic = 'force-dynamic';
 import { Partner, Tag } from '@/lib/types';
 import PartnerList from '@/components/PartnerList';
 import { getSession } from '@/lib/auth';

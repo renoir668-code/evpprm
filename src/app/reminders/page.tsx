@@ -1,4 +1,5 @@
 import { getPartners, getInteractions, getCustomReminders, getSettings } from '@/lib/actions';
+export const dynamic = 'force-dynamic';
 import Link from 'next/link';
 import { Calendar, AlertCircle, ArrowRight, Clock, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';

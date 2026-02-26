@@ -1,4 +1,5 @@
 import { getPartners } from '@/lib/actions';
+export const dynamic = 'force-dynamic';
 import { PipelineBoard } from './PipelineBoard';
 
 export default async function PipelinePage() {

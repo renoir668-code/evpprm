@@ -19,7 +19,7 @@ export async function getPartners(): Promise<Partner[]> {
         GROUP BY p.id 
         ORDER BY p.created_at DESC
     `);
-    const formatted = res.rows.map(row => ({
+    const formatted = res.rows.map((row: any) => ({
         ...row,
         created_at: new Date(row.created_at).toISOString(),
         last_interaction_date: row.last_interaction_date ? new Date(row.last_interaction_date).toISOString() : null
@@ -30,7 +30,7 @@ export async function getPartners(): Promise<Partner[]> {
 export async function getPartner(id: string): Promise<Partner | undefined> {
     const res = await query('SELECT * FROM partners WHERE id = $1', [id]);
     if (!res.rows[0]) return undefined;
-    const row = res.rows[0];
+    const row: any = res.rows[0];
     return { ...row, created_at: new Date(row.created_at).toISOString() } as Partner;
 }
 
@@ -142,7 +142,7 @@ export async function createContact(partnerId: string, data: Omit<Contact, 'id' 
 
 export async function getInteractions(partnerId: string): Promise<Interaction[]> {
     const res = await query('SELECT * FROM interactions WHERE partner_id = $1 ORDER BY date DESC', [partnerId]);
-    return res.rows.map(row => ({ ...row, date: new Date(row.date).toISOString() })) as Interaction[];
+    return res.rows.map((row: any) => ({ ...row, date: new Date(row.date).toISOString() })) as Interaction[];
 }
 
 export async function getRecentInteractions(limit: number = 5): Promise<(Interaction & { partner_name: string })[]> {
@@ -153,7 +153,7 @@ export async function getRecentInteractions(limit: number = 5): Promise<(Interac
         ORDER BY i.date DESC 
         LIMIT $1
     `, [limit]);
-    return res.rows.map(row => ({ ...row, date: new Date(row.date).toISOString() })) as (Interaction & { partner_name: string })[];
+    return res.rows.map((row: any) => ({ ...row, date: new Date(row.date).toISOString() })) as (Interaction & { partner_name: string })[];
 }
 
 export async function createInteraction(partnerId: string, data: Omit<Interaction, 'id' | 'partner_id'>) {
@@ -210,15 +210,15 @@ export async function uploadAttachment(formData: FormData): Promise<string> {
 export async function getCustomReminders(partnerId?: string): Promise<CustomReminder[]> {
     if (partnerId) {
         const res = await query('SELECT * FROM custom_reminders WHERE partner_id = $1 AND completed = 0 ORDER BY due_date ASC', [partnerId]);
-        return res.rows.map(row => ({ ...row, due_date: new Date(row.due_date).toISOString(), created_at: row.created_at ? new Date(row.created_at).toISOString() : undefined })) as CustomReminder[];
+        return res.rows.map((row: any) => ({ ...row, due_date: new Date(row.due_date).toISOString(), created_at: row.created_at ? new Date(row.created_at).toISOString() : undefined })) as CustomReminder[];
     }
     const res = await query('SELECT * FROM custom_reminders WHERE completed = 0 ORDER BY due_date ASC');
-    return res.rows.map(row => ({ ...row, due_date: new Date(row.due_date).toISOString(), created_at: row.created_at ? new Date(row.created_at).toISOString() : undefined })) as CustomReminder[];
+    return res.rows.map((row: any) => ({ ...row, due_date: new Date(row.due_date).toISOString(), created_at: row.created_at ? new Date(row.created_at).toISOString() : undefined })) as CustomReminder[];
 }
 
 export async function getAllCustomReminders(partnerId: string): Promise<CustomReminder[]> {
     const res = await query('SELECT * FROM custom_reminders WHERE partner_id = $1 ORDER BY completed ASC, due_date ASC', [partnerId]);
-    return res.rows.map(row => ({ ...row, due_date: new Date(row.due_date).toISOString(), created_at: row.created_at ? new Date(row.created_at).toISOString() : undefined, completed_at: row.completed_at ? new Date(row.completed_at).toISOString() : null })) as CustomReminder[];
+    return res.rows.map((row: any) => ({ ...row, due_date: new Date(row.due_date).toISOString(), created_at: row.created_at ? new Date(row.created_at).toISOString() : undefined, completed_at: row.completed_at ? new Date(row.completed_at).toISOString() : null })) as CustomReminder[];
 }
 
 export async function createCustomReminder(partnerId: string, data: Omit<CustomReminder, 'id' | 'partner_id' | 'completed'>) {
@@ -292,13 +292,13 @@ export async function setSetting(key: string, value: string) {
 
 export async function getUsers(): Promise<User[]> {
     const res = await query('SELECT id, name, email, role, created_at FROM users');
-    return res.rows.map(row => ({ ...row, created_at: new Date(row.created_at).toISOString() })) as User[];
+    return res.rows.map((row: any) => ({ ...row, created_at: new Date(row.created_at).toISOString() })) as User[];
 }
 
 export async function getUser(id: string): Promise<User | undefined> {
     const res = await query('SELECT id, name, email, role, created_at FROM users WHERE id = $1', [id]);
     if (!res.rows[0]) return undefined;
-    const row = res.rows[0];
+    const row: any = res.rows[0];
     return { ...row, created_at: new Date(row.created_at).toISOString() } as User;
 }
 

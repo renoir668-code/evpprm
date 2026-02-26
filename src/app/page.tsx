@@ -1,4 +1,5 @@
 import { getPartners, getInteractions, getCustomReminders, getRecentInteractions } from '@/lib/actions';
+export const dynamic = 'force-dynamic';
 import { Users, AlertTriangle, CheckCircle, Handshake, ArrowRight, Calendar, MessageSquare, Clock, Phone, Mail } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';

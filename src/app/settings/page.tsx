@@ -1,4 +1,5 @@
 import { getSettings, getUsers, getPartners } from '@/lib/actions';
+export const dynamic = 'force-dynamic';
 import { getSession } from '@/lib/auth';
 import { Settings as SettingsIcon, Users } from 'lucide-react';
 import SettingsForm from '@/components/SettingsForm';
