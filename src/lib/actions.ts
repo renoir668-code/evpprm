@@ -74,6 +74,39 @@ export async function deletePartner(id: string) {
     revalidatePath('/pipeline');
 }
 
+export async function bulkDeletePartners(ids: string[]) {
+    if (!ids || ids.length === 0) return;
+
+    const client = await getClient();
+    try {
+        await client.query('BEGIN');
+
+        // Postgres IN clause can take an array $1 for some drivers, but for standard pg we often use UNNEST or similar
+        // Since we are using a wrapper, let's keep it simple with a string building approach OR multiple queries if the list isn't huge.
+        // Actually, let's just use the existing deletePartner in a loop but inside ONE transaction for safety and atomicity.
+
+        for (const id of ids) {
+            await client.query('DELETE FROM interactions WHERE partner_id = $1', [id]);
+            await client.query('DELETE FROM contacts WHERE partner_id = $1', [id]);
+            await client.query('DELETE FROM custom_reminders WHERE partner_id = $1', [id]);
+            await client.query('DELETE FROM partner_tags WHERE partner_id = $1', [id]);
+            await client.query('DELETE FROM partners WHERE id = $1', [id]);
+        }
+
+        await client.query('COMMIT');
+    } catch (e) {
+        await client.query('ROLLBACK');
+        throw e;
+    } finally {
+        client.release();
+    }
+
+    revalidatePath('/');
+    revalidatePath('/directory');
+    revalidatePath('/analytics');
+    revalidatePath('/pipeline');
+}
+
 export async function updatePartner(id: string, data: Partial<Partner>) {
     const current = await getPartner(id);
     if (!current) throw new Error('Partner not found');
@@ -323,5 +356,18 @@ export async function createUser(data: Omit<User, 'id' | 'created_at' | 'passwor
 
 export async function deleteUser(id: string) {
     await query('DELETE FROM users WHERE id = $1', [id]);
+    revalidatePath('/settings');
+}
+
+export async function updateUser(id: string, data: Partial<User>) {
+    const current = await getUser(id);
+    if (!current) throw new Error('User not found');
+
+    // We only allow updating name, email, and role here to keep it simple as requested
+    const name = data.name ?? current.name;
+    const email = data.email ?? current.email;
+    const role = data.role ?? current.role;
+
+    await query('UPDATE users SET name = $1, email = $2, role = $3 WHERE id = $4', [name, email, role, id]);
     revalidatePath('/settings');
 }
