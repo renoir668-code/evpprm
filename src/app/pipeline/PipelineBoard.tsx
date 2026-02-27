@@ -123,7 +123,18 @@ export function PipelineBoard({ initialPartners }: { initialPartners: Partner[] 
                                         draggedId === p.id && "opacity-50 scale-95"
                                     )}
                                 >
-                                    <h4 className="font-bold text-slate-800 text-sm mb-1">{p.partnerName}</h4>
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <div className="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
+                                            {p.partner.logo_url ? (
+                                                <img src={p.partner.logo_url} alt={p.partnerName} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <span className="text-indigo-600 font-bold text-[10px]">
+                                                    {p.partnerName.charAt(0).toUpperCase()}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <h4 className="font-bold text-slate-800 text-sm truncate">{p.partnerName}</h4>
+                                    </div>
                                     <div className="flex flex-wrap gap-1 mb-3">
                                         <span className={cn(
                                             "text-[10px] font-bold px-2 py-0.5 rounded-md",

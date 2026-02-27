@@ -32,6 +32,7 @@ export default function EditPartnerModal({
     const [attentionDays, setAttentionDays] = useState(partner.needs_attention_days);
     const [vertical, setVertical] = useState(partner.vertical || '');
     const [useCase, setUseCase] = useState(partner.use_case || '');
+    const [logoUrl, setLogoUrl] = useState(partner.logo_url || '');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     async function handleSubmit(e: React.FormEvent) {
@@ -46,7 +47,8 @@ export default function EditPartnerModal({
             key_person_id: keyPerson,
             needs_attention_days: attentionDays,
             vertical,
-            use_case: useCase
+            use_case: useCase,
+            logo_url: logoUrl || null
         });
         setIsSubmitting(false);
         setIsOpen(false);
@@ -76,6 +78,11 @@ export default function EditPartnerModal({
                                 <div className="col-span-2">
                                     <label className="block text-sm font-medium text-slate-700 mb-1">Company Name</label>
                                     <input required type="text" className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" value={name} onChange={e => setName(e.target.value)} />
+                                </div>
+
+                                <div className="col-span-2">
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Logo URL (Optional)</label>
+                                    <input type="url" className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" placeholder="https://example.com/logo.png" value={logoUrl} onChange={e => setLogoUrl(e.target.value)} />
                                 </div>
 
                                 <div>

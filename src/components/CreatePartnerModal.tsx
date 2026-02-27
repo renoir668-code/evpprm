@@ -6,6 +6,7 @@ import { createPartner } from '@/lib/actions';
 
 export default function CreatePartnerModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
     const [name, setName] = useState('');
+    const [logoUrl, setLogoUrl] = useState('');
     const [needsAttentionDays, setNeedsAttentionDays] = useState(30);
 
     if (!isOpen) return null;
@@ -19,9 +20,11 @@ export default function CreatePartnerModal({ isOpen, onClose }: { isOpen: boolea
             integration_products: '',
             key_person_id: null,
             needs_attention_days: needsAttentionDays,
-            owner_id: null
+            owner_id: null,
+            logo_url: logoUrl || null
         });
         setName('');
+        setLogoUrl('');
         setNeedsAttentionDays(30);
         onClose();
     }
@@ -46,6 +49,17 @@ export default function CreatePartnerModal({ isOpen, onClose }: { isOpen: boolea
                             placeholder="e.g. Acme Corp"
                             value={name}
                             onChange={e => setName(e.target.value)}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Logo URL (Optional)</label>
+                        <input
+                            type="url"
+                            className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                            placeholder="https://example.com/logo.png"
+                            value={logoUrl}
+                            onChange={e => setLogoUrl(e.target.value)}
                         />
                     </div>
 

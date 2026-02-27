@@ -18,6 +18,7 @@ export interface Partner {
     vertical?: string | null;
     use_case?: string | null;
     last_interaction_date?: string | null;
+    logo_url?: string | null;
 }
 
 export interface User {

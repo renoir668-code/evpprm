@@ -232,10 +232,14 @@ export default function PartnerList({
                             >
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0 border border-indigo-100">
-                                            <span className="text-indigo-600 font-bold text-lg">
-                                                {partner.name.charAt(0).toUpperCase()}
-                                            </span>
+                                        <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0 border border-indigo-100 overflow-hidden">
+                                            {partner.logo_url ? (
+                                                <img src={partner.logo_url} alt={partner.name} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <span className="text-indigo-600 font-bold text-lg">
+                                                    {partner.name.charAt(0).toUpperCase()}
+                                                </span>
+                                            )}
                                         </div>
                                         <div>
                                             <h3 className="text-lg font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">

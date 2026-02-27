@@ -45,10 +45,14 @@ export default async function PartnerProfile({ params }: { params: Promise<{ id:
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-6 mb-6">
                     <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center shrink-0 border border-indigo-100">
-                            <span className="text-indigo-600 font-bold text-3xl">
-                                {partner.name.charAt(0).toUpperCase()}
-                            </span>
+                        <div className="w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center shrink-0 border border-indigo-100 overflow-hidden">
+                            {partner.logo_url ? (
+                                <img src={partner.logo_url} alt={partner.name} className="w-full h-full object-cover" />
+                            ) : (
+                                <span className="text-indigo-600 font-bold text-3xl">
+                                    {partner.name.charAt(0).toUpperCase()}
+                                </span>
+                            )}
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold text-slate-900">{partner.name}</h1>

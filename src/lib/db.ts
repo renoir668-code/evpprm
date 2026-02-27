@@ -57,9 +57,17 @@ export async function initDb(): Promise<void> {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         owner_id TEXT REFERENCES users(id) ON DELETE SET NULL,
         vertical TEXT,
-        use_case TEXT
+        use_case TEXT,
+        logo_url TEXT
       )
     `);
+
+    // Migration: Add logo_url to partners if it doesn't exist
+    try {
+      await client.query('ALTER TABLE partners ADD COLUMN IF NOT EXISTS logo_url TEXT');
+    } catch (e) {
+      console.log('logo_url column might already exist or error adding it');
+    }
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS tags (

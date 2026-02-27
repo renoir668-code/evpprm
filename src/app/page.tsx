@@ -139,10 +139,19 @@ export default async function Dashboard() {
             ) : (
               recentInteractions.map(interaction => (
                 <div key={interaction.id} className="px-6 py-4 flex items-start gap-4 hover:bg-white/50 transition-colors group">
-                  <div className="mt-1 p-2 rounded-xl bg-slate-50 border border-slate-100 text-slate-500 shrink-0">
-                    {interaction.type === 'call' ? <Phone className="w-4 h-4" /> :
-                      interaction.type === 'meeting' ? <Calendar className="w-4 h-4" /> :
-                        <Mail className="w-4 h-4" />}
+                  <div className="relative shrink-0">
+                    <div className="w-12 h-12 rounded-xl bg-white/60 border border-white shadow-sm flex items-center justify-center overflow-hidden">
+                      {interaction.partner_logo ? (
+                        <img src={interaction.partner_logo} alt={interaction.partner_name} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-lg font-bold text-indigo-500">{interaction.partner_name.charAt(0).toUpperCase()}</span>
+                      )}
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-lg bg-white border border-slate-100 shadow-sm flex items-center justify-center text-slate-500 scale-90">
+                      {interaction.type === 'call' ? <Phone className="w-3 h-3" /> :
+                        interaction.type === 'meeting' ? <Calendar className="w-3 h-3" /> :
+                          <Mail className="w-3 h-3" />}
+                    </div>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-0.5">
@@ -188,16 +197,25 @@ export default async function Dashboard() {
           <div className="divide-y divide-white/40 bg-white/10">
             {needingAttention.map(({ partner, daysSinceLast }) => (
               <div key={partner.id} className="px-8 py-6 flex items-center justify-between hover:bg-white/50 transition-all duration-300 group cursor-pointer hover:pl-10">
-                <div>
-                  <Link href={`/partners/${partner.id}`} className="text-xl font-bold text-slate-800 group-hover:text-indigo-600 transition-colors drop-shadow-sm">
-                    {partner.name}
-                  </Link>
-                  <p className="text-sm font-medium text-slate-500 mt-2 flex items-center gap-2">
-                    <span>{dict.dashboard.lastInteraction}</span>
-                    <span className="text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded-md">{daysSinceLast === 'Never' ? dict.dashboard.never : `${daysSinceLast} ${dict.dashboard.daysAgo}`}</span>
-                    <span className="text-slate-300 mx-1">•</span>
-                    <span>{dict.dashboard.threshold} <span className="text-slate-700 font-bold">{partner.needs_attention_days} {dict.dashboard.days}</span></span>
-                  </p>
+                <div className="flex items-center gap-5">
+                  <div className="w-14 h-14 rounded-2xl bg-white/50 border border-white shadow-sm flex items-center justify-center shrink-0 overflow-hidden">
+                    {partner.logo_url ? (
+                      <img src={partner.logo_url} alt={partner.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-xl font-bold text-indigo-500">{partner.name.charAt(0).toUpperCase()}</span>
+                    )}
+                  </div>
+                  <div>
+                    <Link href={`/partners/${partner.id}`} className="text-xl font-bold text-slate-800 group-hover:text-indigo-600 transition-colors drop-shadow-sm">
+                      {partner.name}
+                    </Link>
+                    <p className="text-sm font-medium text-slate-500 mt-2 flex items-center gap-2">
+                      <span>{dict.dashboard.lastInteraction}</span>
+                      <span className="text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded-md">{daysSinceLast === 'Never' ? dict.dashboard.never : `${daysSinceLast} ${dict.dashboard.daysAgo}`}</span>
+                      <span className="text-slate-300 mx-1">•</span>
+                      <span>{dict.dashboard.threshold} <span className="text-slate-700 font-bold">{partner.needs_attention_days} {dict.dashboard.days}</span></span>
+                    </p>
+                  </div>
                 </div>
                 <Link
                   href={`/partners/${partner.id}`}

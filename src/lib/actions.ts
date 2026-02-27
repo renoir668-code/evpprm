@@ -37,9 +37,9 @@ export async function getPartner(id: string): Promise<Partner | undefined> {
 export async function createPartner(data: Omit<Partner, 'id' | 'created_at'>) {
     const id = randomUUID();
     await query(`
-        INSERT INTO partners (id, name, health_status, integration_status, integration_products, key_person_id, needs_attention_days, owner_id, vertical, use_case)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-    `, [id, data.name, data.health_status, data.integration_status, data.integration_products, data.key_person_id, data.needs_attention_days, data.owner_id || null, data.vertical || null, data.use_case || null]);
+        INSERT INTO partners (id, name, health_status, integration_status, integration_products, key_person_id, needs_attention_days, owner_id, vertical, use_case, logo_url)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+    `, [id, data.name, data.health_status, data.integration_status, data.integration_products, data.key_person_id, data.needs_attention_days, data.owner_id || null, data.vertical || null, data.use_case || null, data.logo_url || null]);
 
     revalidatePath('/');
     revalidatePath('/directory');
@@ -80,9 +80,9 @@ export async function updatePartner(id: string, data: Partial<Partner>) {
     const merged = { ...current, ...data };
     await query(`
         UPDATE partners 
-        SET name = $1, health_status = $2, integration_status = $3, integration_products = $4, key_person_id = $5, needs_attention_days = $6, owner_id = $7, vertical = $8, use_case = $9
-        WHERE id = $10
-    `, [merged.name, merged.health_status, merged.integration_status, merged.integration_products, merged.key_person_id, merged.needs_attention_days, merged.owner_id || null, merged.vertical || null, merged.use_case || null, id]);
+        SET name = $1, health_status = $2, integration_status = $3, integration_products = $4, key_person_id = $5, needs_attention_days = $6, owner_id = $7, vertical = $8, use_case = $9, logo_url = $10
+        WHERE id = $11
+    `, [merged.name, merged.health_status, merged.integration_status, merged.integration_products, merged.key_person_id, merged.needs_attention_days, merged.owner_id || null, merged.vertical || null, merged.use_case || null, merged.logo_url || null, id]);
 
     revalidatePath('/');
     revalidatePath('/directory');
@@ -105,19 +105,20 @@ export async function importPartners(data: any[]) {
         const use_case = row['use_case'] ? String(row['use_case']).trim() : null;
         const int_status = row['integration_status'] ? String(row['integration_status']).trim() : 'No';
         const int_products = row['integration_products'] ? String(row['integration_products']).trim() : '[]';
+        const logo_url = row['logo_url'] ? String(row['logo_url']).trim() : null;
 
         if (existing) {
             await query(`
                 UPDATE partners 
-                SET health_status = $1, needs_attention_days = $2, vertical = $3, key_person_id = $4, owner_id = $5, use_case = $6, integration_status = $7, integration_products = $8
-                WHERE id = $9
-            `, [health, attention, vertical, key_person_id, owner_id, use_case, int_status, int_products, existing.id]);
+                SET health_status = $1, needs_attention_days = $2, vertical = $3, key_person_id = $4, owner_id = $5, use_case = $6, integration_status = $7, integration_products = $8, logo_url = $9
+                WHERE id = $10
+            `, [health, attention, vertical, key_person_id, owner_id, use_case, int_status, int_products, logo_url || existing.logo_url, existing.id]);
         } else {
             const id = randomUUID();
             await query(`
-                INSERT INTO partners (id, name, health_status, needs_attention_days, vertical, key_person_id, owner_id, use_case, integration_status, integration_products)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-            `, [id, name, health, attention, vertical, key_person_id, owner_id, use_case, int_status, int_products]);
+                INSERT INTO partners (id, name, health_status, needs_attention_days, vertical, key_person_id, owner_id, use_case, integration_status, integration_products, logo_url)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+            `, [id, name, health, attention, vertical, key_person_id, owner_id, use_case, int_status, int_products, logo_url]);
         }
     }
     revalidatePath('/');
@@ -145,15 +146,15 @@ export async function getInteractions(partnerId: string): Promise<Interaction[]>
     return res.rows.map((row: any) => ({ ...row, date: new Date(row.date).toISOString() })) as Interaction[];
 }
 
-export async function getRecentInteractions(limit: number = 5): Promise<(Interaction & { partner_name: string })[]> {
+export async function getRecentInteractions(limit: number = 5): Promise<(Interaction & { partner_name: string, partner_logo: string | null })[]> {
     const res = await query(`
-        SELECT i.*, p.name as partner_name 
+        SELECT i.*, p.name as partner_name, p.logo_url as partner_logo 
         FROM interactions i 
         JOIN partners p ON i.partner_id = p.id 
         ORDER BY i.date DESC 
         LIMIT $1
     `, [limit]);
-    return res.rows.map((row: any) => ({ ...row, date: new Date(row.date).toISOString() })) as (Interaction & { partner_name: string })[];
+    return res.rows.map((row: any) => ({ ...row, date: new Date(row.date).toISOString() })) as (Interaction & { partner_name: string, partner_logo: string | null })[];
 }
 
 export async function createInteraction(partnerId: string, data: Omit<Interaction, 'id' | 'partner_id'>) {
