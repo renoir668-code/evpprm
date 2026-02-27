@@ -4,33 +4,40 @@ import { useState, useRef } from 'react';
 import { Tag, ProductIntegration } from '@/lib/types';
 import { PartnerWithTags } from '@/app/directory/page';
 import Link from 'next/link';
-import { Search, Plus, Building2, ChevronRight, Activity, Download, UploadCloud, FileDown, Loader2, Trash2 } from 'lucide-react';
+import { Building2, Search, Plus, Filter, LayoutGrid, List, FileSpreadsheet, Download, X, UploadCloud, FileDown, Loader2, Trash2, Activity, ChevronRight, ChevronDown, MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import CreatePartnerModal from './CreatePartnerModal';
 import * as xlsx from 'xlsx';
 import { importPartners } from '@/lib/actions';
+
+import { Dictionary } from '@/lib/types';
 
 export default function PartnerList({
     initialPartners,
     allTags,
     availableProducts,
     availableTeam,
-    isAdmin
+    availableVerticals,
+    isAdmin,
+    dict
 }: {
     initialPartners: PartnerWithTags[];
     allTags: Tag[];
     availableProducts: string[];
     availableTeam: string[];
+    availableVerticals: string[];
     isAdmin?: boolean;
+    dict: Dictionary;
 }) {
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedTag, setSelectedTag] = useState<string | null>(null);
+    const [selectedVertical, setSelectedVertical] = useState<string>('');
     const [selectedStatus, setSelectedStatus] = useState<string>('');
     const [selectedProduct, setSelectedProduct] = useState<string>('');
     const [selectedTeam, setSelectedTeam] = useState<string>('');
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isImporting, setIsImporting] = useState(false);
+    const [isActionsOpen, setIsActionsOpen] = useState(false);
 
     // Filter partners
     const filtered = initialPartners.filter((p) => {
@@ -38,13 +45,13 @@ export default function PartnerList({
         try { prods = JSON.parse(p.integration_products || '[]'); } catch { }
 
         const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesTag = selectedTag ? p.tags.some((t) => t.id === selectedTag) : true;
+        const matchesVertical = selectedVertical ? p.vertical === selectedVertical : true;
         const matchesStatus = selectedStatus
             ? (prods.length > 0 ? prods.some(pr => pr.status === selectedStatus) : selectedStatus === 'No')
             : true;
         const matchesProduct = selectedProduct ? prods.some(pr => pr.product === selectedProduct) : true;
         const matchesTeam = selectedTeam ? p.key_person_id === selectedTeam : true;
-        return matchesSearch && matchesTag && matchesStatus && matchesProduct && matchesTeam;
+        return matchesSearch && matchesVertical && matchesStatus && matchesProduct && matchesTeam;
     });
 
     const exportToCSV = () => {
@@ -111,17 +118,27 @@ export default function PartnerList({
     return (
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row gap-4 justify-between">
-                <div className="flex bg-white/60 backdrop-blur-md border border-white rounded-xl overflow-hidden shadow-sm focus-within:ring-4 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 transition-all flex-1 max-w-md">
+                <div className="flex bg-white/60 backdrop-blur-md border border-white rounded-xl overflow-hidden shadow-sm focus-within:ring-4 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 transition-all flex-1 max-w-xl">
                     <div className="pl-4 flex items-center justify-center">
                         <Search className="w-5 h-5 text-slate-400" />
                     </div>
                     <input
                         type="text"
                         className="w-full py-3 px-3 outline-none text-slate-700 bg-transparent placeholder:text-slate-400 font-medium"
-                        placeholder="Search partners by name..."
+                        placeholder={dict.directory.searchPlaceholder}
+                        title={dict.directory.searchPlaceholder}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
+                    {searchQuery && (
+                        <button
+                            onClick={() => setSearchQuery('')}
+                            className="pr-4 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
+                            title={dict.common.clear}
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    )}
                 </div>
 
                 <div className="flex gap-3 flex-wrap">
@@ -129,24 +146,26 @@ export default function PartnerList({
                         className="bg-white/60 backdrop-blur-md border border-white rounded-xl px-4 py-3 shadow-sm outline-none text-slate-700 font-medium focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
                         value={selectedStatus}
                         onChange={(e) => setSelectedStatus(e.target.value)}
+                        title={dict.directory.allStatuses}
                     >
-                        <option value="">All Statuses</option>
-                        <option value="No">Not Started</option>
-                        <option value="In pipeline">In Pipeline</option>
-                        <option value="In development">In Development</option>
-                        <option value="Finished">Finished</option>
-                        <option value="Not interested">Not Interested</option>
+                        <option value="">{dict.directory.allStatuses}</option>
+                        <option value="No">{dict.common.notStarted}</option>
+                        <option value="In pipeline">{dict.common.inPipeline}</option>
+                        <option value="In development">{dict.common.inDevelopment}</option>
+                        <option value="Finished">{dict.common.finished}</option>
+                        <option value="Not interested">{dict.common.notInterested}</option>
                     </select>
 
                     <select
                         className="bg-white/60 backdrop-blur-md border border-white rounded-xl px-4 py-3 shadow-sm outline-none text-slate-700 font-medium focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
-                        value={selectedTag || ''}
-                        onChange={(e) => setSelectedTag(e.target.value || null)}
+                        value={selectedVertical}
+                        onChange={(e) => setSelectedVertical(e.target.value)}
+                        title={dict.directory.allVerticals}
                     >
-                        <option value="">All Tags</option>
-                        {allTags.map((t) => (
-                            <option key={t.id} value={t.id}>
-                                {t.name}
+                        <option value="">{dict.directory.allVerticals}</option>
+                        {availableVerticals.map((v) => (
+                            <option key={v} value={v}>
+                                {v}
                             </option>
                         ))}
                     </select>
@@ -155,8 +174,9 @@ export default function PartnerList({
                         className="bg-white/60 backdrop-blur-md border border-white rounded-xl px-4 py-3 shadow-sm outline-none text-slate-700 font-medium focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
                         value={selectedProduct}
                         onChange={(e) => setSelectedProduct(e.target.value)}
+                        title={dict.directory.allProducts}
                     >
-                        <option value="">All Products</option>
+                        <option value="">{dict.directory.allProducts}</option>
                         {availableProducts.map(p => <option key={p} value={p}>{p}</option>)}
                     </select>
 
@@ -164,8 +184,9 @@ export default function PartnerList({
                         className="bg-white/60 backdrop-blur-md border border-white rounded-xl px-4 py-3 shadow-sm outline-none text-slate-700 font-medium focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
                         value={selectedTeam}
                         onChange={(e) => setSelectedTeam(e.target.value)}
+                        title={dict.directory.allTeamMembers}
                     >
-                        <option value="">All Team Members</option>
+                        <option value="">{dict.directory.allTeamMembers}</option>
                         {availableTeam.map(t => <option key={t} value={t}>{t}</option>)}
                     </select>
 
@@ -175,42 +196,74 @@ export default function PartnerList({
                         ref={fileInputRef}
                         className="hidden"
                         onChange={handleImport}
+                        title={dict.directory.import}
                     />
 
-                    <button
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={isImporting}
-                        className="bg-white/60 hover:bg-white text-slate-700 hover:text-indigo-600 px-4 py-3 rounded-xl flex items-center gap-2 font-bold shadow-sm transition-all border border-white hover:shadow-md disabled:opacity-50"
-                        title="Import CSV/XLSX"
-                    >
-                        {isImporting ? <Loader2 className="w-5 h-5 animate-spin" /> : <UploadCloud className="w-5 h-5" />}
-                        <span className="hidden sm:inline">Import</span>
-                    </button>
+                    <div className="relative">
+                        <button
+                            onClick={() => setIsActionsOpen(!isActionsOpen)}
+                            className="bg-white/60 hover:bg-white text-slate-700 hover:text-indigo-600 px-4 py-3 rounded-xl flex items-center gap-2 font-bold shadow-sm transition-all border border-white hover:shadow-md"
+                            title={dict.common.more || 'More Actions'}
+                        >
+                            <FileSpreadsheet className="w-5 h-5" />
+                            <span className="hidden sm:inline">{dict.directory.manageData || 'Manage Data'}</span>
+                            <ChevronDown className={cn("w-4 h-4 transition-transform", isActionsOpen && "rotate-180")} />
+                        </button>
 
-                    <button
-                        onClick={downloadTemplate}
-                        className="bg-white/60 hover:bg-white text-slate-700 hover:text-indigo-600 px-4 py-3 rounded-xl flex items-center gap-2 font-bold shadow-sm transition-all border border-white hover:shadow-md"
-                        title="Download Template"
-                    >
-                        <FileDown className="w-5 h-5" />
-                        <span className="hidden sm:inline">Template</span>
-                    </button>
+                        {isActionsOpen && (
+                            <>
+                                <div
+                                    className="fixed inset-0 z-20"
+                                    onClick={() => setIsActionsOpen(false)}
+                                />
+                                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 p-2 z-30 animate-in fade-in zoom-in-95 duration-150 origin-top-right">
+                                    <button
+                                        onClick={() => {
+                                            fileInputRef.current?.click();
+                                            setIsActionsOpen(false);
+                                        }}
+                                        disabled={isImporting}
+                                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all disabled:opacity-50"
+                                    >
+                                        {isImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
+                                        {dict.directory.import}
+                                    </button>
 
-                    <button
-                        onClick={exportToCSV}
-                        className="bg-white/60 hover:bg-white text-slate-700 hover:text-indigo-600 px-4 py-3 rounded-xl flex items-center gap-2 font-bold shadow-sm transition-all border border-white hover:shadow-md"
-                        title="Export to CSV"
-                    >
-                        <Download className="w-5 h-5" />
-                        <span className="hidden sm:inline">Export</span>
-                    </button>
+                                    <button
+                                        onClick={() => {
+                                            downloadTemplate();
+                                            setIsActionsOpen(false);
+                                        }}
+                                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                                    >
+                                        <FileDown className="w-4 h-4" />
+                                        {dict.directory.template}
+                                    </button>
+
+                                    <div className="my-1 h-px bg-slate-100" />
+
+                                    <button
+                                        onClick={() => {
+                                            exportToCSV();
+                                            setIsActionsOpen(false);
+                                        }}
+                                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                                    >
+                                        <Download className="w-4 h-4" />
+                                        {dict.directory.export}
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
 
                     <button
                         onClick={() => setIsCreateModalOpen(true)}
                         className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl flex items-center gap-2 font-bold shadow-md shadow-indigo-600/20 transition-all hover:shadow-lg hover:-translate-y-0.5"
+                        title={dict.directory.addPartner}
                     >
                         <Plus className="w-5 h-5" />
-                        New Partner
+                        {dict.directory.addPartner}
                     </button>
                 </div>
             </div>
@@ -219,8 +272,8 @@ export default function PartnerList({
                 {filtered.length === 0 ? (
                     <div className="px-6 py-16 text-center text-slate-500">
                         <Building2 className="w-12 h-12 mx-auto text-slate-200 mb-3" />
-                        <p className="font-medium text-slate-900">No partners found</p>
-                        <p className="text-sm mt-1">Adjust your search or add a new partner.</p>
+                        <p className="font-medium text-slate-900">{dict.directory.noPartnersFound}</p>
+                        <p className="text-sm mt-1">{dict.directory.noPartnersSubtitle}</p>
                     </div>
                 ) : (
                     <div className="divide-y divide-slate-100">
@@ -257,7 +310,10 @@ export default function PartnerList({
                                                     )}
                                                 >
                                                     <Activity className="w-3 h-3" />
-                                                    {partner.health_status}
+                                                    {partner.health_status === 'Active' ? dict.common.active :
+                                                        partner.health_status === 'At Risk' ? dict.common.atRisk :
+                                                            partner.health_status === 'Dormant' ? dict.common.dormant :
+                                                                partner.health_status}
                                                 </span>
 
                                                 {partner.tags.map((tag) => (
@@ -274,18 +330,18 @@ export default function PartnerList({
 
                                     <div className="flex items-center justify-end gap-6 sm:gap-8 w-full md:w-auto">
                                         <div className="hidden lg:block text-right shrink-0 w-[140px]">
-                                            <p className="text-sm text-slate-500 font-medium whitespace-nowrap">Last Interaction</p>
+                                            <p className="text-sm text-slate-500 font-medium whitespace-nowrap">{dict.directory.lastInteraction}</p>
                                             <p className="text-sm text-slate-900 font-bold truncate">
-                                                {partner.last_interaction_date ? new Date(partner.last_interaction_date).toLocaleDateString() : 'Never'}
+                                                {partner.last_interaction_date ? new Date(partner.last_interaction_date).toLocaleDateString() : dict.common.never}
                                             </p>
                                         </div>
                                         <div className="hidden md:block text-right shrink-0 w-[150px]">
-                                            <p className="text-sm text-slate-500 font-medium">Integrations</p>
+                                            <p className="text-sm text-slate-500 font-medium">{dict.directory.integrations}</p>
                                             <p className="text-sm text-slate-900 line-clamp-1 max-w-[150px]">
                                                 {(() => {
                                                     let prods: ProductIntegration[] = [];
                                                     try { prods = JSON.parse(partner.integration_products || '[]'); } catch { }
-                                                    return prods.length > 0 ? prods.map(p => p.product).join(', ') : 'None';
+                                                    return prods.length > 0 ? prods.map(p => p.product).join(', ') : dict.common.none;
                                                 })()}
                                             </p>
                                         </div>
@@ -303,6 +359,7 @@ export default function PartnerList({
             <CreatePartnerModal
                 isOpen={isCreateModalOpen}
                 onClose={() => setIsCreateModalOpen(false)}
+                dict={dict}
             />
         </div>
     );

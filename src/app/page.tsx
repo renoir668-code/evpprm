@@ -1,4 +1,4 @@
-import { getPartners, getInteractions, getCustomReminders, getRecentInteractions } from '@/lib/actions';
+import { getPartners, getInteractions, getCustomReminders, getRecentInteractions, getCurrentUserDetails } from '@/lib/actions';
 export const dynamic = 'force-dynamic';
 import { Users, AlertTriangle, CheckCircle, Handshake, ArrowRight, Calendar, MessageSquare, Clock, Phone, Mail } from 'lucide-react';
 import Link from 'next/link';
@@ -7,7 +7,19 @@ import { getDict } from '@/lib/i18n';
 
 export default async function Dashboard() {
   const dict = await getDict();
-  const partners = await getPartners();
+  const allPartners = await getPartners();
+  const userDetails = await getCurrentUserDetails();
+  const userKP = userDetails?.linked_key_person;
+  const userGroupIds = userDetails?.workgroups.map(g => g.id) || [];
+  const isAdmin = userDetails?.role === 'Admin';
+
+  // Filter partners based on user context
+  const partners = allPartners.filter(p => {
+    if (isAdmin) return true; // Admins see all
+    const isPersonal = userKP && p.key_person_id === userKP;
+    const isWorkgroup = userGroupIds.includes(p.key_person_id || '');
+    return isPersonal || isWorkgroup;
+  });
 
   const totalPartners = partners.length;
   const activeCollaborations = partners.filter(p => p.health_status === 'Active').length;

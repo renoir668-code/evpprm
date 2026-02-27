@@ -8,12 +8,14 @@ export default function SettingsForm({
     initialProducts,
     initialTeam,
     initialVerticals,
-    initialUseCases
+    initialUseCases,
+    dict
 }: {
     initialProducts: string;
     initialTeam: string;
     initialVerticals: string;
     initialUseCases: string;
+    dict: any;
 }) {
     const [products, setProducts] = useState(initialProducts);
     const [team, setTeam] = useState(initialTeam);
@@ -41,12 +43,14 @@ export default function SettingsForm({
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
             <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Available Products (Comma separated)
+                    {dict.settings.availableProducts}
                 </label>
-                <p className="text-xs text-slate-500 mb-2">These products can be selected when editing a partner's integration status.</p>
+                <p className="text-xs text-slate-500 mb-2">{dict.settings.productsHelp}</p>
                 <input
                     type="text"
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-shadow text-slate-900"
+                    placeholder={dict.settings.availableProducts}
+                    title={dict.settings.availableProducts}
                     value={products}
                     onChange={e => setProducts(e.target.value)}
                 />
@@ -54,12 +58,14 @@ export default function SettingsForm({
 
             <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Team Members (Comma separated)
+                    {dict.settings.teamMembers}
                 </label>
-                <p className="text-xs text-slate-500 mb-2">Used for selecting the Key Person on an account.</p>
+                <p className="text-xs text-slate-500 mb-2">{dict.settings.teamHelp}</p>
                 <input
                     type="text"
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-shadow text-slate-900"
+                    placeholder={dict.settings.teamMembers}
+                    title={dict.settings.teamMembers}
                     value={team}
                     onChange={e => setTeam(e.target.value)}
                 />
@@ -67,12 +73,14 @@ export default function SettingsForm({
 
             <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Verticals (Comma separated)
+                    {dict.settings.verticals}
                 </label>
-                <p className="text-xs text-slate-500 mb-2">Used for selecting the Vertical on an account.</p>
+                <p className="text-xs text-slate-500 mb-2">{dict.settings.verticalsHelp}</p>
                 <input
                     type="text"
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-shadow text-slate-900"
+                    placeholder={dict.settings.verticals}
+                    title={dict.settings.verticals}
                     value={verticals}
                     onChange={e => setVerticals(e.target.value)}
                 />
@@ -80,12 +88,14 @@ export default function SettingsForm({
 
             <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Use Cases (Comma separated)
+                    {dict.settings.useCases}
                 </label>
-                <p className="text-xs text-slate-500 mb-2">Used for selecting the Use Case on an account.</p>
+                <p className="text-xs text-slate-500 mb-2">{dict.settings.useCasesHelp}</p>
                 <input
                     type="text"
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-shadow text-slate-900"
+                    placeholder={dict.settings.useCases}
+                    title={dict.settings.useCases}
                     value={useCases}
                     onChange={e => setUseCases(e.target.value)}
                 />
@@ -98,7 +108,7 @@ export default function SettingsForm({
                     className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-70 text-white rounded-lg transition-colors font-medium shadow-sm flex items-center gap-2"
                 >
                     {saved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
-                    {saved ? 'Saved!' : isSaving ? 'Saving...' : 'Save Settings'}
+                    {saved ? dict.settings.saved : isSaving ? dict.settings.saving : dict.settings.saveSettings}
                 </button>
             </div>
         </form>

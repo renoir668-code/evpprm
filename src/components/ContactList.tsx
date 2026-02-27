@@ -5,7 +5,7 @@ import { Contact } from '@/lib/types';
 import { createContact } from '@/lib/actions';
 import { Users, Plus, Mail } from 'lucide-react';
 
-export default function ContactList({ partnerId, initialContacts }: { partnerId: string, initialContacts: Contact[] }) {
+export default function ContactList({ partnerId, initialContacts, dict }: { partnerId: string, initialContacts: Contact[], dict: any }) {
     const [isAdding, setIsAdding] = useState(false);
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -30,24 +30,25 @@ export default function ContactList({ partnerId, initialContacts }: { partnerId:
             <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
                 <h2 className="font-semibold text-slate-900 flex items-center gap-2">
                     <Users className="w-4 h-4 text-indigo-500" />
-                    Key Contacts
+                    {dict.partnerDetail.keyContacts}
                 </h2>
                 <button
                     onClick={() => setIsAdding(!isAdding)}
                     className="font-medium text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1"
+                    title={dict.common.add}
                 >
-                    <Plus className="w-3.5 h-3.5" /> Add
+                    <Plus className="w-3.5 h-3.5" /> {dict.common.add}
                 </button>
             </div>
 
             {isAdding && (
                 <form onSubmit={handleSubmit} className="p-4 border-b border-slate-100 bg-indigo-50/50 space-y-3">
-                    <input required disabled={isSubmitting} type="text" placeholder="Name" className="w-full text-sm px-3 py-2 border border-slate-200 rounded-md outline-none focus:ring-1 focus:ring-indigo-500" value={name} onChange={e => setName(e.target.value)} />
-                    <input disabled={isSubmitting} type="email" placeholder="Email" className="w-full text-sm px-3 py-2 border border-slate-200 rounded-md outline-none focus:ring-1 focus:ring-indigo-500" value={email} onChange={e => setEmail(e.target.value)} />
-                    <input disabled={isSubmitting} type="text" placeholder="Role / Title" className="w-full text-sm px-3 py-2 border border-slate-200 rounded-md outline-none focus:ring-1 focus:ring-indigo-500" value={role} onChange={e => setRole(e.target.value)} />
+                    <input required disabled={isSubmitting} type="text" placeholder={dict.partnerDetail.contactName} title={dict.partnerDetail.contactName} className="w-full text-sm px-3 py-2 border border-slate-200 rounded-md outline-none focus:ring-1 focus:ring-indigo-500" value={name} onChange={e => setName(e.target.value)} />
+                    <input disabled={isSubmitting} type="email" placeholder={dict.partnerDetail.contactEmail} title={dict.partnerDetail.contactEmail} className="w-full text-sm px-3 py-2 border border-slate-200 rounded-md outline-none focus:ring-1 focus:ring-indigo-500" value={email} onChange={e => setEmail(e.target.value)} />
+                    <input disabled={isSubmitting} type="text" placeholder={dict.partnerDetail.contactRole} title={dict.partnerDetail.contactRole} className="w-full text-sm px-3 py-2 border border-slate-200 rounded-md outline-none focus:ring-1 focus:ring-indigo-500" value={role} onChange={e => setRole(e.target.value)} />
                     <div className="flex justify-end gap-2 pt-1">
-                        <button type="button" disabled={isSubmitting} onClick={() => setIsAdding(false)} className="px-3 py-1.5 text-slate-600 hover:bg-slate-200 rounded-md transition-colors">Cancel</button>
-                        <button type="submit" disabled={isSubmitting} className="px-3 py-1.5 bg-indigo-600 text-white hover:bg-indigo-700 rounded-md disabled:opacity-50 transition-colors">Save</button>
+                        <button type="button" disabled={isSubmitting} onClick={() => setIsAdding(false)} className="px-3 py-1.5 text-slate-600 hover:bg-slate-200 rounded-md transition-colors">{dict.common.cancel}</button>
+                        <button type="submit" disabled={isSubmitting} className="px-3 py-1.5 bg-indigo-600 text-white hover:bg-indigo-700 rounded-md disabled:opacity-50 transition-colors">{dict.common.save}</button>
                     </div>
                 </form>
             )}

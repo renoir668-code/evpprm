@@ -1,10 +1,11 @@
 'use server';
 
 import { query, getClient } from './db';
-import { Partner, Contact, Interaction, Tag, Setting, CustomReminder, User } from './types';
+import { Partner, Contact, Interaction, Tag, Setting, CustomReminder, User, Workgroup } from './types';
 import { randomUUID } from 'crypto';
 import { revalidatePath } from 'next/cache';
 import * as bcrypt from 'bcrypt';
+import { getSession } from './auth';
 import * as fs from 'fs';
 import * as path from 'path';
 import { put } from '@vercel/blob';
@@ -328,17 +329,18 @@ export async function setSetting(key: string, value: string) {
         ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
     `, [key, value]);
     revalidatePath('/');
+    revalidatePath('/settings');
 }
 
 // --- USERS ---
 
 export async function getUsers(): Promise<User[]> {
-    const res = await query('SELECT id, name, email, role, created_at FROM users');
+    const res = await query('SELECT id, name, email, role, created_at, linked_key_person FROM users');
     return res.rows.map((row: any) => ({ ...row, created_at: new Date(row.created_at).toISOString() })) as User[];
 }
 
 export async function getUser(id: string): Promise<User | undefined> {
-    const res = await query('SELECT id, name, email, role, created_at FROM users WHERE id = $1', [id]);
+    const res = await query('SELECT id, name, email, role, created_at, linked_key_person FROM users WHERE id = $1', [id]);
     if (!res.rows[0]) return undefined;
     const row: any = res.rows[0];
     return { ...row, created_at: new Date(row.created_at).toISOString() } as User;
@@ -350,7 +352,20 @@ export async function createUser(data: Omit<User, 'id' | 'created_at' | 'passwor
     if (data.password) {
         hash = await bcrypt.hash(data.password, 10);
     }
-    await query('INSERT INTO users (id, name, email, role, password_hash) VALUES ($1, $2, $3, $4, $5)', [id, data.name, data.email, data.role, hash]);
+    await query('INSERT INTO users (id, name, email, role, password_hash, linked_key_person) VALUES ($1, $2, $3, $4, $5, $6)', [id, data.name, data.email, data.role, hash, data.linked_key_person || null]);
+    revalidatePath('/settings');
+}
+
+export async function updateUser(id: string, data: Partial<User>) {
+    const current = await getUser(id);
+    if (!current) throw new Error('User not found');
+
+    const name = data.name ?? current.name;
+    const email = data.email ?? current.email;
+    const role = data.role ?? current.role;
+    const linked_key_person = data.hasOwnProperty('linked_key_person') ? data.linked_key_person : current.linked_key_person;
+
+    await query('UPDATE users SET name = $1, email = $2, role = $3, linked_key_person = $4 WHERE id = $5', [name, email, role, linked_key_person || null, id]);
     revalidatePath('/settings');
 }
 
@@ -359,15 +374,79 @@ export async function deleteUser(id: string) {
     revalidatePath('/settings');
 }
 
-export async function updateUser(id: string, data: Partial<User>) {
-    const current = await getUser(id);
-    if (!current) throw new Error('User not found');
+// --- WORKGROUPS ---
 
-    // We only allow updating name, email, and role here to keep it simple as requested
-    const name = data.name ?? current.name;
-    const email = data.email ?? current.email;
-    const role = data.role ?? current.role;
+export async function getWorkgroups(): Promise<Workgroup[]> {
+    const groupsRes = await query('SELECT * FROM workgroups');
+    const workgroups: Workgroup[] = [];
 
-    await query('UPDATE users SET name = $1, email = $2, role = $3 WHERE id = $4', [name, email, role, id]);
+    for (const row of groupsRes.rows) {
+        const membersRes = await query('SELECT user_id FROM user_workgroups WHERE workgroup_id = $1', [row.id]);
+        workgroups.push({
+            id: row.id,
+            name: row.name,
+            member_ids: membersRes.rows.map((r: any) => r.user_id)
+        });
+    }
+    return workgroups;
+}
+
+export async function createWorkgroup(name: string) {
+    const id = randomUUID();
+    await query('INSERT INTO workgroups (id, name) VALUES ($1, $2)', [id, name]);
     revalidatePath('/settings');
+    return id;
+}
+
+export async function deleteWorkgroup(id: string) {
+    await query('DELETE FROM workgroups WHERE id = $1', [id]);
+    revalidatePath('/settings');
+}
+
+export async function setWorkgroupMembers(workgroupId: string, userIds: string[]) {
+    const client = await getClient();
+    try {
+        await client.query('BEGIN');
+        await client.query('DELETE FROM user_workgroups WHERE workgroup_id = $1', [workgroupId]);
+        for (const userId of userIds) {
+            await client.query('INSERT INTO user_workgroups (user_id, workgroup_id) VALUES ($1, $2)', [userId, workgroupId]);
+        }
+        await client.query('COMMIT');
+    } catch (e) {
+        await client.query('ROLLBACK');
+        throw e;
+    } finally {
+        client.release();
+    }
+    revalidatePath('/settings');
+}
+
+export async function getKeyPeople(): Promise<string[]> {
+    try {
+        const res = await query('SELECT value FROM settings WHERE key = $1', ['team']);
+        const value = res.rows[0]?.value || 'Admin, Sales, Support';
+        return value
+            .split(',')
+            .map((s: string) => s.trim())
+            .filter(Boolean);
+    } catch (e) {
+        console.error("Error in getKeyPeople:", e);
+        return ['Admin', 'Sales', 'Support'];
+    }
+}
+
+export async function getCurrentUserDetails() {
+    const session = await getSession();
+    if (!session || !session.userId) return null;
+
+    const user = await getUser(session.userId as string);
+    if (!user) return null;
+
+    const workgroups = await getWorkgroups();
+    const userGroups = workgroups.filter(g => g.member_ids.includes(user.id));
+
+    return {
+        ...user,
+        workgroups: userGroups
+    };
 }

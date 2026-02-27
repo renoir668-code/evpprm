@@ -60,8 +60,8 @@ export function Sidebar({ userName, userRole, dict, initialLang }: { userName?: 
                 <div className="flex items-center justify-between px-5 mb-3 bg-white/40 rounded-xl p-2">
                     <div className="flex items-center gap-2 text-slate-500 font-bold text-xs"><Globe className="w-4 h-4" /> Lang</div>
                     <div className="flex gap-1">
-                        <button onClick={() => switchLanguage('en')} className={cn("text-xs font-bold px-2 py-1 rounded-md transition-all", initialLang === 'en' ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-500 hover:bg-white')}>EN</button>
-                        <button onClick={() => switchLanguage('pt-PT')} className={cn("text-xs font-bold px-2 py-1 rounded-md transition-all", initialLang === 'pt-PT' ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-500 hover:bg-white')}>PT</button>
+                        <button onClick={() => switchLanguage('en')} className={cn("text-xs font-bold px-2 py-1 rounded-md transition-all", initialLang === 'en' ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-500 hover:bg-white')} title="English">EN</button>
+                        <button onClick={() => switchLanguage('pt-PT')} className={cn("text-xs font-bold px-2 py-1 rounded-md transition-all", initialLang === 'pt-PT' ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-500 hover:bg-white')} title="Português">PT</button>
                     </div>
                 </div>
 

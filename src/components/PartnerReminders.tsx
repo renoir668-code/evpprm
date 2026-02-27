@@ -5,7 +5,7 @@ import { CustomReminder } from '@/lib/types';
 import { createCustomReminder, completeCustomReminder } from '@/lib/actions';
 import { Calendar, CheckCircle, Clock } from 'lucide-react';
 
-export default function PartnerReminders({ partnerId, initialReminders }: { partnerId: string; initialReminders: CustomReminder[] }) {
+export default function PartnerReminders({ partnerId, initialReminders, dict }: { partnerId: string; initialReminders: CustomReminder[], dict: any }) {
     const [title, setTitle] = useState('');
     const [dueDate, setDueDate] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,7 +41,7 @@ export default function PartnerReminders({ partnerId, initialReminders }: { part
         <section className="bg-white rounded-xl p-5 border border-slate-200 mt-6 overflow-hidden">
             <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2">
                 <Clock className="w-4 h-4 text-indigo-500" />
-                Custom Reminders
+                {dict.partnerDetail.customReminders}
             </h2>
 
             <form onSubmit={handleSubmit} className="mb-6 flex gap-2 w-full">
@@ -49,7 +49,8 @@ export default function PartnerReminders({ partnerId, initialReminders }: { part
                     type="text"
                     required
                     maxLength={100}
-                    placeholder="e.g. Schedule follow-up call"
+                    placeholder={dict.partnerDetail.reminderPlaceholder}
+                    title={dict.partnerDetail.reminderTitle}
                     value={title}
                     onChange={e => setTitle(e.target.value)}
                     className="flex-1 min-w-0 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 placeholder:text-slate-400"
@@ -57,6 +58,7 @@ export default function PartnerReminders({ partnerId, initialReminders }: { part
                 <input
                     type="date"
                     required
+                    title={dict.partnerDetail.dueDate}
                     value={dueDate}
                     onChange={e => setDueDate(e.target.value)}
                     className="w-36 shrink-0 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-600"

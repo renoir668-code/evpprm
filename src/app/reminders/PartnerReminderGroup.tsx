@@ -17,7 +17,7 @@ interface GroupedReminder {
     } | null;
 }
 
-export function PartnerReminderGroup({ group }: { group: GroupedReminder }) {
+export function PartnerReminderGroup({ group, dict }: { group: GroupedReminder, dict: any }) {
     const [isExpanded, setIsExpanded] = useState(false);
     const [isDismissing, setIsDismissing] = useState(false);
     const { partner, customReminders, attentionReminder } = group;
@@ -61,7 +61,7 @@ export function PartnerReminderGroup({ group }: { group: GroupedReminder }) {
                                 "text-[10px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider",
                                 hasUrgent ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"
                             )}>
-                                {customReminders.length + (attentionReminder ? 1 : 0)} Active Reminders
+                                {customReminders.length + (attentionReminder ? 1 : 0)} {dict.reminders.activeReminders}
                             </span>
                         </div>
                     </div>
@@ -72,8 +72,8 @@ export function PartnerReminderGroup({ group }: { group: GroupedReminder }) {
                         {attentionReminder && (
                             <p className="text-sm font-medium text-slate-500">
                                 {attentionReminder.status === 'overdue' ?
-                                    <span className="text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded-md border border-amber-100">Overdue</span> :
-                                    <span className="font-bold text-indigo-600">{attentionReminder.daysRemaining} days left</span>
+                                    <span className="text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded-md border border-amber-100">{dict.reminders.overdue}</span> :
+                                    <span className="font-bold text-indigo-600">{attentionReminder.daysRemaining} {dict.reminders.upcoming}</span>
                                 }
                             </p>
                         )}
@@ -98,9 +98,9 @@ export function PartnerReminderGroup({ group }: { group: GroupedReminder }) {
                                         <Clock className="w-5 h-5" />
                                     </div>
                                     <div>
-                                        <p className="text-sm font-bold text-slate-800">Standard Follow-up</p>
+                                        <p className="text-sm font-bold text-slate-800">{dict.reminders.standardFollowUp}</p>
                                         <p className="text-xs text-slate-500 mt-1">
-                                            Last interaction or dismissal: <span className="font-bold text-slate-700">{attentionReminder.daysSinceLastTouch === 'Never' ? 'Never' : `${attentionReminder.daysSinceLastTouch} days ago`}</span>
+                                            {dict.reminders.lastInteractionOrDismissal} <span className="font-bold text-slate-700">{attentionReminder.daysSinceLastTouch === 'Never' ? dict.common.never : `${attentionReminder.daysSinceLastTouch} ${dict.common.daysAgo || 'days ago'}`}</span>
                                         </p>
                                     </div>
                                 </div>
@@ -111,7 +111,7 @@ export function PartnerReminderGroup({ group }: { group: GroupedReminder }) {
                                         className="flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-50"
                                     >
                                         <BellOff className="w-3.5 h-3.5" />
-                                        <span>Dismiss</span>
+                                        <span>{dict.reminders.dismiss}</span>
                                     </button>
                                     <Link href={`/partners/${partner.id}`} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors">
                                         <ArrowRight className="w-5 h-5" />
@@ -130,7 +130,7 @@ export function PartnerReminderGroup({ group }: { group: GroupedReminder }) {
                                     <div>
                                         <p className="text-sm font-bold text-slate-800">{cr.title}</p>
                                         <p className="text-xs text-slate-500 mt-1">
-                                            Goal Date: <span className="font-bold text-emerald-600">{new Date(cr.due_date).toLocaleDateString()}</span>
+                                            {dict.reminders.goalDate} <span className="font-bold text-emerald-600">{new Date(cr.due_date).toLocaleDateString()}</span>
                                         </p>
                                     </div>
                                 </div>

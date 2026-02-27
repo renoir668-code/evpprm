@@ -6,17 +6,19 @@ import { updatePartnerProducts } from '@/lib/actions';
 import { cn } from '@/lib/utils';
 import { MoreHorizontal } from 'lucide-react';
 
+import { Tag, Dictionary } from '@/lib/types';
+
 const COLUMNS = [
-    { id: 'No', label: 'Not Started', color: 'bg-slate-100' },
-    { id: 'In pipeline', label: 'In Pipeline', color: 'bg-blue-100' },
-    { id: 'In development', label: 'In Development', color: 'bg-orange-100' },
-    { id: 'Finished', label: 'Finished', color: 'bg-emerald-100' },
-    { id: 'On hold', label: 'On Hold', color: 'bg-yellow-100' },
-    { id: 'Cancelled', label: 'Cancelled', color: 'bg-stone-100' },
-    { id: 'Not interested', label: 'Not Interested', color: 'bg-red-100' },
+    { id: 'No', color: 'bg-slate-100', dictKey: 'notStarted' },
+    { id: 'In pipeline', color: 'bg-blue-100', dictKey: 'inPipeline' },
+    { id: 'In development', color: 'bg-orange-100', dictKey: 'inDevelopment' },
+    { id: 'Finished', color: 'bg-emerald-100', dictKey: 'finished' },
+    { id: 'On hold', color: 'bg-yellow-100', dictKey: 'onHold' },
+    { id: 'Cancelled', color: 'bg-stone-100', dictKey: 'cancelled' },
+    { id: 'Not interested', color: 'bg-red-100', dictKey: 'notInterested' },
 ];
 
-export function PipelineBoard({ initialPartners }: { initialPartners: Partner[] }) {
+export function PipelineBoard({ initialPartners, dict }: { initialPartners: Partner[], dict: Dictionary }) {
     const [partners, setPartners] = useState(initialPartners);
     const [draggedId, setDraggedId] = useState<string | null>(null);
 
@@ -105,7 +107,7 @@ export function PipelineBoard({ initialPartners }: { initialPartners: Partner[] 
                         onDrop={(e) => handleDrop(e, col.id)}
                     >
                         <div className="flex justify-between items-center mb-4 px-1">
-                            <h3 className="font-bold text-slate-700 tracking-tight">{col.label}</h3>
+                            <h3 className="font-bold text-slate-700 tracking-tight">{(dict.common as any)[col.dictKey]}</h3>
                             <span className="text-xs font-bold bg-white/60 text-slate-500 px-2 py-1 rounded-full shadow-sm">
                                 {colItems.length}
                             </span>
@@ -142,13 +144,19 @@ export function PipelineBoard({ initialPartners }: { initialPartners: Partner[] 
                                                 p.health_status === 'At Risk' ? 'bg-amber-100 text-amber-700' :
                                                     'bg-slate-200 text-slate-600'
                                         )}>
-                                            {p.health_status}
+                                            {p.health_status === 'Active' ? dict.common.active :
+                                                p.health_status === 'At Risk' ? dict.common.atRisk :
+                                                    p.health_status === 'Dormant' ? dict.common.dormant :
+                                                        p.health_status}
                                         </span>
                                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-600 truncate max-w-[120px]">
                                             {p.product}
                                         </span>
                                     </div>
-                                    <button className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-slate-600 transition-opacity">
+                                    <button
+                                        className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-slate-600 transition-opacity"
+                                        title={dict.common.edit}
+                                    >
                                         <MoreHorizontal className="w-4 h-4" />
                                     </button>
                                 </div>

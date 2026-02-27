@@ -5,7 +5,7 @@ import { Interaction } from '@/lib/types';
 import { updateInteraction, uploadAttachment } from '@/lib/actions';
 import { Phone, Calendar, Mail, Paperclip, Save, X, Edit2, Loader2 } from 'lucide-react';
 
-export default function InteractionLogItem({ interaction }: { interaction: Interaction }) {
+export default function InteractionLogItem({ interaction, dict }: { interaction: Interaction, dict: any }) {
     const [isEditing, setIsEditing] = useState(false);
     const [notes, setNotes] = useState(interaction.notes || '');
     const [date, setDate] = useState(interaction.date ? new Date(interaction.date).toISOString().slice(0, 16) : '');
@@ -70,12 +70,14 @@ export default function InteractionLogItem({ interaction }: { interaction: Inter
                 {!isEditing ? (
                     <>
                         <div className="flex items-center justify-between space-x-2 mb-1">
-                            <div className="font-bold text-slate-900 capitalize">{interaction.type}</div>
+                            <div className="font-bold text-slate-900 capitalize">
+                                {interaction.type === 'call' ? dict.common.call : interaction.type === 'email' ? dict.common.email : interaction.type === 'meeting' ? dict.common.meeting : interaction.type}
+                            </div>
                             <div className="flex items-center gap-3">
                                 <time className="text-xs font-medium text-slate-500">
                                     {new Date(interaction.date).toLocaleDateString()}
                                 </time>
-                                <button onClick={() => setIsEditing(true)} className="text-slate-400 hover:text-indigo-600 transition-colors opacity-0 group-hover:opacity-100">
+                                <button onClick={() => setIsEditing(true)} className="text-slate-400 hover:text-indigo-600 transition-colors opacity-0 group-hover:opacity-100" title={dict.common.edit}>
                                     <Edit2 className="w-3.5 h-3.5" />
                                 </button>
                             </div>
@@ -101,12 +103,14 @@ export default function InteractionLogItem({ interaction }: { interaction: Inter
                                 className="text-xs border border-slate-200 rounded p-1 outline-none text-slate-600 focus:border-indigo-500"
                                 value={date}
                                 onChange={e => setDate(e.target.value)}
+                                title={dict.partnerDetail.interactionDate}
                             />
                         </div>
                         <textarea
                             className="w-full text-sm resize-y outline-none border border-slate-200 rounded-md p-2 focus:border-indigo-500 bg-slate-50 text-slate-700 min-h-[80px]"
                             value={notes}
                             onChange={e => setNotes(e.target.value)}
+                            title={dict.partnerDetail.interactionLog}
                         />
 
                         <div className="flex flex-col gap-2 pt-2 border-t border-slate-100">
@@ -114,23 +118,23 @@ export default function InteractionLogItem({ interaction }: { interaction: Inter
                                 {attachments.map((att, i) => (
                                     <span key={i} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-100 border border-slate-200 text-xs font-medium text-slate-600 flex-shrink-0">
                                         {att.name}
-                                        <button onClick={() => handleRemoveAttachment(att.url)} className="text-slate-400 hover:text-red-500 ml-1"><X className="w-3 h-3" /></button>
+                                        <button onClick={() => handleRemoveAttachment(att.url)} className="text-slate-400 hover:text-red-500 ml-1" title={dict.common.delete}><X className="w-3 h-3" /></button>
                                     </span>
                                 ))}
                             </div>
 
                             <div className="flex items-center justify-between mt-1">
-                                <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-500 hover:text-indigo-600 transition-colors">
+                                <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-500 hover:text-indigo-600 transition-colors" title={dict.partnerDetail.attachFile}>
                                     {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
-                                    <span className="hidden sm:inline">{isUploading ? 'Uploading...' : 'Add attachment'}</span>
+                                    <span className="hidden sm:inline">{isUploading ? dict.common.loading : dict.partnerDetail.attach}</span>
                                     <input type="file" className="hidden" onChange={handleFileUpload} disabled={isUploading} />
                                 </label>
 
                                 <div className="flex items-center gap-2">
-                                    <button onClick={() => setIsEditing(false)} className="px-3 py-1.5 rounded-md text-xs font-medium text-slate-500 hover:bg-slate-100">Cancel</button>
+                                    <button onClick={() => setIsEditing(false)} className="px-3 py-1.5 rounded-md text-xs font-medium text-slate-500 hover:bg-slate-100">{dict.common.cancel}</button>
                                     <button onClick={handleSave} disabled={isSaving || isUploading} className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-3 py-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 shadow-sm">
                                         {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                                        Save
+                                        {dict.common.save}
                                     </button>
                                 </div>
                             </div>

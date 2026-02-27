@@ -1,12 +1,22 @@
 'use client';
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList, Cell, PieChart, Pie } from 'recharts';
-import { Partner, Interaction } from '@/lib/types';
+import { Partner, Interaction, Dictionary } from '@/lib/types';
 import { useMemo, useState } from 'react';
 
 const COLORS = ['#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#64748b'];
 
-export function AnalyticsCharts({ partners, interactions, availableTeam }: { partners: Partner[], interactions: Interaction[], availableTeam: string[] }) {
+export function AnalyticsCharts({
+    partners,
+    interactions,
+    availableTeam,
+    dict
+}: {
+    partners: Partner[],
+    interactions: Interaction[],
+    availableTeam: string[],
+    dict: Dictionary
+}) {
     const [timelineDays, setTimelineDays] = useState(14);
     const [selectedTeamMember, setSelectedTeamMember] = useState<string>('');
     const [selectedPartnerId, setSelectedPartnerId] = useState<string>('');
@@ -84,120 +94,120 @@ export function AnalyticsCharts({ partners, interactions, availableTeam }: { par
         }));
     }, [filteredInteractions, timelineDays]);
 
-    // Multi-tenant: Health by Vertical
-    const healthByVerticalData = useMemo(() => {
-        if (!selectedVertical) return []; // Only show if not filtering by a specific vertical (or maybe show all to compare)
-        // Wait, if they filter by vertical, they just see that vertical's health.
-        // Let's show a breakdown of health across ALL filtered partners, grouped by vertical.
-
-        const countsByVertical: Record<string, { Active: number, 'At Risk': number, Dormant: number }> = {};
+    // Integrations by Vertical (Finished or In Pipeline)
+    const integrationsByVerticalData = useMemo(() => {
+        const countsByVertical: Record<string, { Finished: number, 'In Pipeline': number }> = {};
 
         filteredPartners.forEach(p => {
-            const vertical = p.vertical || 'Uncategorized';
+            const vertical = p.vertical || dict.analytics.uncategorized;
             if (!countsByVertical[vertical]) {
-                countsByVertical[vertical] = { Active: 0, 'At Risk': 0, Dormant: 0 };
+                countsByVertical[vertical] = { Finished: 0, 'In Pipeline': 0 };
             }
-            if (p.health_status === 'Active' || p.health_status === 'At Risk' || p.health_status === 'Dormant') {
-                countsByVertical[vertical][p.health_status]++;
-            }
+
+            let prods: any[] = [];
+            try { prods = JSON.parse(p.integration_products || '[]'); } catch { }
+
+            prods.forEach(prod => {
+                if (prod.status === 'Finished') countsByVertical[vertical].Finished++;
+                if (prod.status === 'In pipeline' || prod.status === 'In development') countsByVertical[vertical]['In Pipeline']++;
+            });
         });
 
         return Object.entries(countsByVertical).map(([name, counts]) => ({
             name,
-            Active: counts.Active,
-            'At Risk': counts['At Risk'],
-            Dormant: counts.Dormant
-        })).sort((a, b) => (b.Active + b['At Risk'] + b.Dormant) - (a.Active + a['At Risk'] + a.Dormant)).slice(0, 10);
-    }, [filteredPartners, selectedVertical]);
+            Finished: counts.Finished,
+            'In Pipeline': counts['In Pipeline']
+        })).sort((a, b) => (b.Finished + b['In Pipeline']) - (a.Finished + a['In Pipeline'])).slice(0, 10);
+    }, [filteredPartners, dict.analytics.uncategorized]);
 
-    // Multi-tenant: Interaction Frequency by Vertical
-    const interactionsByVerticalData = useMemo(() => {
-        const interactionsByVertical: Record<string, number> = {};
+    // Integrations by Product
+    const integrationsByProductData = useMemo(() => {
+        const productCounts: Record<string, number> = {};
 
-        filteredInteractions.forEach(i => {
-            const partner = filteredPartners.find(p => p.id === i.partner_id);
-            if (partner) {
-                const vertical = partner.vertical || 'Uncategorized';
-                interactionsByVertical[vertical] = (interactionsByVertical[vertical] || 0) + 1;
-            }
+        filteredPartners.forEach(p => {
+            let prods: any[] = [];
+            try { prods = JSON.parse(p.integration_products || '[]'); } catch { }
+
+            prods.forEach(prod => {
+                if (prod.status === 'Finished') {
+                    productCounts[prod.product] = (productCounts[prod.product] || 0) + 1;
+                }
+            });
         });
 
-        return Object.entries(interactionsByVertical).map(([name, volume]) => ({
+        return Object.entries(productCounts).map(([name, count]) => ({
             name,
-            volume
-        })).sort((a, b) => b.volume - a.volume).slice(0, 10);
-    }, [filteredInteractions, filteredPartners]);
+            count
+        })).sort((a, b) => b.count - a.count).slice(0, 10);
+    }, [filteredPartners]);
 
-    // Team Performance: Interactions Logged Per User
-    const interactionsPerUser = useMemo(() => {
+    // Team Performance: Partner Assignment
+    const assignmentData = useMemo(() => {
         const counts: Record<string, number> = {};
-        filteredInteractions.forEach(i => {
-            const partner = filteredPartners.find(p => p.id === i.partner_id);
-            if (partner && partner.key_person_id) {
-                counts[partner.key_person_id] = (counts[partner.key_person_id] || 0) + 1;
-            }
-        });
-        return Object.entries(counts).map(([name, logCount]) => ({ name, logCount })).sort((a, b) => b.logCount - a.logCount);
-    }, [filteredInteractions, filteredPartners]);
-
-    // Team Performance: Partners Assigned Per User & Coverage Gaps
-    const coveragePerUser = useMemo(() => {
-        const counts: Record<string, { active: number, total: number }> = {};
         let unassigned = 0;
 
         filteredPartners.forEach(p => {
             if (!p.key_person_id) {
                 unassigned++;
             } else {
-                if (!counts[p.key_person_id]) {
-                    counts[p.key_person_id] = { active: 0, total: 0 };
-                }
-                counts[p.key_person_id].total++;
-                if (p.health_status === 'Active') {
-                    counts[p.key_person_id].active++;
-                }
+                counts[p.key_person_id] = (counts[p.key_person_id] || 0) + 1;
             }
         });
 
-        const data = Object.entries(counts).map(([name, stats]) => ({
+        const data = Object.entries(counts).map(([name, total]) => ({
             name,
-            Active: stats.active,
-            'Total Assigned': stats.total
-        })).sort((a, b) => b['Total Assigned'] - a['Total Assigned']);
+            [dict.analytics.partnersAssigned]: total
+        })).sort((a, b) => b[dict.analytics.partnersAssigned] - a[dict.analytics.partnersAssigned]);
 
         if (unassigned > 0) {
-            data.push({ name: 'Unassigned (Gap)', Active: 0, 'Total Assigned': unassigned });
+            data.push({ name: dict.common.unassigned, [dict.analytics.partnersAssigned]: unassigned });
         }
 
         return data;
-    }, [filteredPartners]);
+    }, [filteredPartners, dict.analytics.partnersAssigned, dict.common.unassigned]);
 
     return (
         <div className="space-y-6">
             <div className="flex flex-wrap gap-4">
-                <select className="bg-white/60 backdrop-blur-md border border-white rounded-xl px-4 py-3 shadow-sm outline-none text-slate-700 font-medium focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
-                    value={timelineDays} onChange={e => setTimelineDays(Number(e.target.value))}>
-                    <option value={7}>Last 7 Days</option>
-                    <option value={14}>Last 14 Days</option>
-                    <option value={30}>Last 30 Days</option>
-                    <option value={90}>Last 90 Days</option>
+                <select
+                    title={dict.analytics.last30Days}
+                    className="bg-white/60 backdrop-blur-md border border-white rounded-xl px-4 py-3 shadow-sm outline-none text-slate-700 font-medium focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
+                    value={timelineDays}
+                    onChange={e => setTimelineDays(Number(e.target.value))}
+                >
+                    <option value={7}>{dict.analytics.last7Days}</option>
+                    <option value={14}>{dict.analytics.last14Days}</option>
+                    <option value={30}>{dict.analytics.last30Days}</option>
+                    <option value={90}>{dict.analytics.last90Days}</option>
                 </select>
 
-                <select className="bg-white/60 backdrop-blur-md border border-white rounded-xl px-4 py-3 shadow-sm outline-none text-slate-700 font-medium focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
-                    value={selectedTeamMember} onChange={e => setSelectedTeamMember(e.target.value)}>
-                    <option value="">All Team Members</option>
+                <select
+                    title={dict.directory.allTeamMembers}
+                    className="bg-white/60 backdrop-blur-md border border-white rounded-xl px-4 py-3 shadow-sm outline-none text-slate-700 font-medium focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
+                    value={selectedTeamMember}
+                    onChange={e => setSelectedTeamMember(e.target.value)}
+                >
+                    <option value="">{dict.directory.allTeamMembers}</option>
                     {availableTeam.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
 
-                <select className="bg-white/60 backdrop-blur-md border border-white rounded-xl px-4 py-3 shadow-sm outline-none text-slate-700 font-medium focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
-                    value={selectedPartnerId} onChange={e => setSelectedPartnerId(e.target.value)}>
-                    <option value="">All Partners</option>
+                <select
+                    title={dict.analytics.allPartners}
+                    className="bg-white/60 backdrop-blur-md border border-white rounded-xl px-4 py-3 shadow-sm outline-none text-slate-700 font-medium focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
+                    value={selectedPartnerId}
+                    onChange={e => setSelectedPartnerId(e.target.value)}
+                >
+                    <option value="">{dict.analytics.allPartners}</option>
                     {partners.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
 
-                <select className="bg-white/60 backdrop-blur-md border border-white rounded-xl px-4 py-3 shadow-sm outline-none text-slate-700 font-medium focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
-                    value={selectedVertical} onChange={e => setSelectedVertical(e.target.value)}>
-                    <option value="">All Verticals / Tenant Domains</option>
+                <select
+                    title={dict.analytics.allVerticals}
+                    className="bg-white/60 backdrop-blur-md border border-white rounded-xl px-4 py-3 shadow-sm outline-none text-slate-700 font-medium focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
+                    value={selectedVertical}
+                    onChange={e => setSelectedVertical(e.target.value)}
+                >
+                    <option value="">{dict.analytics.allVerticals}</option>
                     {availableVerticals.map(v => <option key={v} value={v}>{v}</option>)}
                 </select>
             </div>
@@ -206,7 +216,7 @@ export function AnalyticsCharts({ partners, interactions, availableTeam }: { par
                 <div className="bg-white/40 p-6 rounded-2xl border border-white/50 shadow-sm">
                     <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-indigo-500" />
-                        Integration Pipeline
+                        {dict.analytics.integrationStatus}
                     </h3>
                     <div className="h-72 w-full">
                         <ResponsiveContainer width="100%" height="100%">
@@ -225,15 +235,27 @@ export function AnalyticsCharts({ partners, interactions, availableTeam }: { par
                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
                                 </Pie>
-                                <Tooltip contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 4px 20px -2px rgba(0,0,0,0.1)' }} />
+                                <Tooltip
+                                    contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 4px 20px -2px rgba(0,0,0,0.1)' }}
+                                    itemStyle={{ fontWeight: '600' }}
+                                />
                             </PieChart>
                         </ResponsiveContainer>
                     </div>
                     <div className="flex flex-wrap gap-4 mt-6 justify-center">
                         {statusData.map((entry, index) => (
                             <div key={entry.name} className="flex items-center gap-2 text-sm font-bold text-slate-600">
-                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
-                                {entry.name} ({entry.value})
+                                <div
+                                    className="w-3 h-3 rounded-full"
+                                    data-color={COLORS[index % COLORS.length]}
+                                />
+                                {entry.name === 'No' ? dict.common.notStarted :
+                                    entry.name === 'Finished' ? dict.common.finished :
+                                        entry.name === 'In pipeline' ? dict.common.inPipeline :
+                                            entry.name === 'In development' ? dict.common.inDevelopment :
+                                                entry.name === 'On hold' ? dict.common.onHold :
+                                                    entry.name === 'Not interested' ? dict.common.notInterested :
+                                                        entry.name} ({entry.value})
                             </div>
                         ))}
                     </div>
@@ -243,7 +265,7 @@ export function AnalyticsCharts({ partners, interactions, availableTeam }: { par
                     <div className="bg-white/40 p-6 rounded-2xl border border-white/50 shadow-sm">
                         <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
                             <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                            Engagement Velocity ({timelineDays} Days)
+                            {dict.analytics.engagementVelocity} ({timelineDays} {dict.common.days})
                         </h3>
                         <div className="h-72 w-full">
                             <ResponsiveContainer width="100%" height="100%">
@@ -276,18 +298,17 @@ export function AnalyticsCharts({ partners, interactions, availableTeam }: { par
                 <div className="bg-white/40 p-6 rounded-2xl border border-white/50 shadow-sm">
                     <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-blue-500" />
-                        Multi-Tenant: Health by Vertical
+                        {dict.analytics.integrationsByVertical}
                     </h3>
                     <div className="h-72 w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={healthByVerticalData} layout="vertical" margin={{ top: 0, right: 0, left: 30, bottom: 0 }}>
+                            <BarChart data={integrationsByVerticalData} layout="vertical" margin={{ top: 0, right: 0, left: 30, bottom: 0 }}>
                                 <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e2e8f0" />
                                 <XAxis type="number" hide />
                                 <YAxis dataKey="name" type="category" tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }} tickLine={false} axisLine={false} />
                                 <Tooltip cursor={{ fill: 'rgba(241, 245, 249, 0.5)' }} contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 4px 20px -2px rgba(0,0,0,0.1)' }} />
-                                <Bar dataKey="Active" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} maxBarSize={30} />
-                                <Bar dataKey="At Risk" stackId="a" fill="#f59e0b" radius={[0, 0, 0, 0]} maxBarSize={30} />
-                                <Bar dataKey="Dormant" stackId="a" fill="#ef4444" radius={[0, 6, 6, 0]} maxBarSize={30} />
+                                <Bar dataKey="Finished" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} maxBarSize={30} />
+                                <Bar dataKey="In Pipeline" stackId="a" fill="#3b82f6" radius={[0, 6, 6, 0]} maxBarSize={30} />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
@@ -296,17 +317,17 @@ export function AnalyticsCharts({ partners, interactions, availableTeam }: { par
                 <div className="bg-white/40 p-6 rounded-2xl border border-white/50 shadow-sm">
                     <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-fuchsia-500" />
-                        Multi-Tenant: Interactions by Vertical
+                        {dict.analytics.integrationsByProduct}
                     </h3>
                     <div className="h-72 w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={interactionsByVerticalData}>
+                            <BarChart data={integrationsByProductData}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                                 <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }} tickLine={false} axisLine={false} />
                                 <YAxis hide />
                                 <Tooltip cursor={{ fill: 'rgba(241, 245, 249, 0.5)' }} contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 4px 20px -2px rgba(0,0,0,0.1)' }} />
-                                <Bar dataKey="volume" fill="#d946ef" radius={[6, 6, 0, 0]} maxBarSize={40}>
-                                    <LabelList dataKey="volume" position="top" fill="#d946ef" fontSize={12} fontWeight={700} />
+                                <Bar dataKey="count" fill="#d946ef" radius={[6, 6, 0, 0]} maxBarSize={40}>
+                                    <LabelList dataKey="count" position="top" fill="#d946ef" fontSize={12} fontWeight={700} />
                                 </Bar>
                             </BarChart>
                         </ResponsiveContainer>
@@ -316,37 +337,18 @@ export function AnalyticsCharts({ partners, interactions, availableTeam }: { par
                 <div className="bg-white/40 p-6 rounded-2xl border border-white/50 shadow-sm">
                     <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-amber-500" />
-                        Team Performance: Logs Recorded
+                        {dict.analytics.partnerDistribution}
                     </h3>
                     <div className="h-72 w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={interactionsPerUser}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                                <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }} tickLine={false} axisLine={false} />
-                                <YAxis hide />
-                                <Tooltip cursor={{ fill: 'rgba(241, 245, 249, 0.5)' }} contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 4px 20px -2px rgba(0,0,0,0.1)' }} />
-                                <Bar dataKey="logCount" fill="#f59e0b" radius={[6, 6, 0, 0]} maxBarSize={40}>
-                                    <LabelList dataKey="logCount" position="top" fill="#f59e0b" fontSize={12} fontWeight={700} />
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-
-                <div className="bg-white/40 p-6 rounded-2xl border border-white/50 shadow-sm">
-                    <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-rose-500" />
-                        Owner Coverage & Unassigned Gaps
-                    </h3>
-                    <div className="h-72 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={coveragePerUser} layout="vertical" margin={{ top: 0, right: 0, left: 30, bottom: 0 }}>
+                            <BarChart data={assignmentData} layout="vertical" margin={{ top: 0, right: 0, left: 30, bottom: 0 }}>
                                 <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e2e8f0" />
                                 <XAxis type="number" hide />
                                 <YAxis dataKey="name" type="category" tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }} tickLine={false} axisLine={false} />
                                 <Tooltip cursor={{ fill: 'rgba(241, 245, 249, 0.5)' }} contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 4px 20px -2px rgba(0,0,0,0.1)' }} />
-                                <Bar dataKey="Active" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} maxBarSize={30} />
-                                <Bar dataKey="Total Assigned" stackId="a" fill="#3b82f6" radius={[0, 6, 6, 0]} maxBarSize={30} />
+                                <Bar dataKey={dict.analytics.partnersAssigned} fill="#3b82f6" radius={[0, 6, 6, 0]} maxBarSize={30}>
+                                    <LabelList dataKey={dict.analytics.partnersAssigned} position="right" fill="#3b82f6" fontSize={12} fontWeight={700} />
+                                </Bar>
                             </BarChart>
                         </ResponsiveContainer>
                     </div>

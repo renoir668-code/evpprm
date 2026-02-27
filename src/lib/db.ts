@@ -48,7 +48,24 @@ export async function initDb(): Promise<void> {
         email TEXT UNIQUE NOT NULL,
         role TEXT DEFAULT 'User',
         password_hash TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        linked_key_person TEXT
+      )
+    `);
+
+    sqliteDb.exec(`
+      CREATE TABLE IF NOT EXISTS workgroups (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    sqliteDb.exec(`
+      CREATE TABLE IF NOT EXISTS user_workgroups (
+        user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+        workgroup_id TEXT REFERENCES workgroups(id) ON DELETE CASCADE,
+        PRIMARY KEY (user_id, workgroup_id)
       )
     `);
 
@@ -76,6 +93,9 @@ export async function initDb(): Promise<void> {
     } catch (e) { }
     try {
       sqliteDb.exec('ALTER TABLE partners ADD COLUMN dismissed_at DATETIME');
+    } catch (e) { }
+    try {
+      sqliteDb.exec('ALTER TABLE users ADD COLUMN linked_key_person TEXT');
     } catch (e) { }
 
     sqliteDb.exec(`
@@ -158,7 +178,24 @@ export async function initDb(): Promise<void> {
         email TEXT UNIQUE NOT NULL,
         role TEXT DEFAULT 'User',
         password_hash TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        linked_key_person TEXT
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS workgroups (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS user_workgroups (
+        user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+        workgroup_id TEXT REFERENCES workgroups(id) ON DELETE CASCADE,
+        PRIMARY KEY (user_id, workgroup_id)
       )
     `);
 
@@ -183,6 +220,10 @@ export async function initDb(): Promise<void> {
     try {
       await client.query('ALTER TABLE partners ADD COLUMN IF NOT EXISTS logo_url TEXT');
       await client.query('ALTER TABLE partners ADD COLUMN IF NOT EXISTS dismissed_at TIMESTAMP');
+    } catch (e) { }
+
+    try {
+      await client.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS linked_key_person TEXT');
     } catch (e) { }
 
     await client.query(`

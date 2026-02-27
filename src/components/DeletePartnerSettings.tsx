@@ -6,7 +6,7 @@ import { Partner } from '@/lib/types';
 import { deletePartner, bulkDeletePartners } from '@/lib/actions';
 import { cn } from '@/lib/utils';
 
-export default function DeletePartnerSettings({ partners }: { partners: Partner[] }) {
+export default function DeletePartnerSettings({ partners, dict }: { partners: Partner[], dict: any }) {
     const [isOpen, setIsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [isDeleting, setIsDeleting] = useState<string | null>(null);
@@ -28,7 +28,7 @@ export default function DeletePartnerSettings({ partners }: { partners: Partner[
     };
 
     const handleDelete = async (id: string, name: string) => {
-        if (confirm(`Are you sure you want to delete ${name}? This action cannot be undone.`)) {
+        if (confirm(dict.settings.deletePartnerConfirm.replace('{name}', name))) {
             setIsDeleting(id);
             try {
                 await deletePartner(id);
@@ -44,7 +44,7 @@ export default function DeletePartnerSettings({ partners }: { partners: Partner[
 
     const handleBulkDelete = async () => {
         if (selectedIds.length === 0) return;
-        if (confirm(`Are you sure you want to delete ${selectedIds.length} partners and all their data? This action is permanent and cannot be undone.`)) {
+        if (confirm(dict.settings.bulkDeleteConfirm.replace('{count}', selectedIds.length.toString()))) {
             setIsBulkDeleting(true);
             try {
                 await bulkDeletePartners(selectedIds);
@@ -67,16 +67,16 @@ export default function DeletePartnerSettings({ partners }: { partners: Partner[
                         <AlertCircle className="w-5 h-5" />
                     </div>
                     <div>
-                        <h2 className="font-extrabold text-rose-900">Danger Zone</h2>
-                        <p className="text-xs text-rose-500 font-medium">Critical actions that cannot be undone</p>
+                        <h2 className="font-extrabold text-rose-900">{dict.settings.dangerZone}</h2>
+                        <p className="text-xs text-rose-500 font-medium">{dict.settings.deletePartnersHelp}</p>
                     </div>
                 </div>
                 <div className="p-8">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                         <div className="max-w-xl">
-                            <p className="text-sm font-bold text-slate-700 mb-2">Delete Partners & Data</p>
+                            <p className="text-sm font-bold text-slate-700 mb-2">{dict.settings.deletePartnersData}</p>
                             <p className="text-sm text-slate-500 leading-relaxed font-medium">
-                                Permanently wipe partners, interactions, contacts, and custom reminders. This is a destructive action—ensure you have backups if needed.
+                                {dict.settings.deletePartnersHelp}
                             </p>
                         </div>
                         <button
@@ -84,7 +84,7 @@ export default function DeletePartnerSettings({ partners }: { partners: Partner[
                             className="shrink-0 bg-white hover:bg-rose-50 text-rose-600 px-6 py-3.5 rounded-2xl flex items-center justify-center gap-2 font-black transition-all border-2 border-rose-100 hover:border-rose-200 active:scale-95 shadow-sm"
                         >
                             <Trash2 className="w-5 h-5" />
-                            Manage Deletions
+                            {dict.settings.manageDeletions}
                         </button>
                     </div>
                 </div>
@@ -105,13 +105,14 @@ export default function DeletePartnerSettings({ partners }: { partners: Partner[
                                     <div className="p-2 bg-rose-50 rounded-lg">
                                         <Trash2 className="w-6 h-6 text-rose-500" />
                                     </div>
-                                    Delete Partners
+                                    {dict.settings.deletePartnersTitle}
                                 </h2>
-                                <p className="text-slate-500 text-sm font-medium mt-1">Select one or more records to permanently remove</p>
+                                <p className="text-slate-500 text-sm font-medium mt-1">{dict.settings.deletePartnersSubtitle}</p>
                             </div>
                             <button
                                 onClick={() => setIsOpen(false)}
                                 disabled={isBulkDeleting}
+                                title="Close dialog"
                                 className="text-slate-400 hover:text-slate-600 transition-all bg-slate-50 hover:bg-slate-100 p-2.5 rounded-full active:scale-90"
                             >
                                 <X className="w-6 h-6" />
@@ -128,9 +129,10 @@ export default function DeletePartnerSettings({ partners }: { partners: Partner[
                                     <input
                                         type="text"
                                         className="w-full py-3.5 px-3 outline-none text-slate-700 bg-transparent placeholder:text-slate-400 font-bold text-sm"
-                                        placeholder="Find partners..."
+                                        placeholder={dict.settings.findPartners}
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
+                                        title={dict.settings.findPartners}
                                     />
                                 </div>
 
@@ -141,7 +143,7 @@ export default function DeletePartnerSettings({ partners }: { partners: Partner[
                                         className="bg-rose-600 hover:bg-rose-700 text-white px-6 py-3.5 rounded-2xl flex items-center justify-center gap-2 font-black transition-all shadow-lg shadow-rose-600/20 active:scale-95 disabled:opacity-50"
                                     >
                                         {isBulkDeleting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
-                                        Delete {selectedIds.length} Selective
+                                        {dict.settings.deleteSelected.replace('{count}', selectedIds.length.toString())}
                                     </button>
                                 )}
                             </div>
@@ -158,10 +160,10 @@ export default function DeletePartnerSettings({ partners }: { partners: Partner[
                                     ) : (
                                         <Square className="w-4 h-4" />
                                     )}
-                                    {selectedIds.length === filtered.length && filtered.length > 0 ? 'Deselect All' : 'Select All Filtered'}
+                                    {selectedIds.length === filtered.length && filtered.length > 0 ? dict.settings.deselectAll : dict.settings.selectAllFiltered}
                                 </button>
                                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-100 px-2 py-1 rounded-md">
-                                    {selectedIds.length} Selected
+                                    {dict.settings.selectedCount.replace('{count}', selectedIds.length.toString())}
                                 </span>
                             </div>
                         </div>
@@ -173,8 +175,8 @@ export default function DeletePartnerSettings({ partners }: { partners: Partner[
                                     <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
                                         <Building2 className="w-10 h-10 text-slate-200" />
                                     </div>
-                                    <p className="font-extrabold text-slate-900 text-lg">No partners match your search</p>
-                                    <p className="text-slate-400 text-sm mt-1">Try a different name or clear the search.</p>
+                                    <p className="font-extrabold text-slate-900 text-lg">{dict.settings.noPartnersMatch}</p>
+                                    <p className="text-slate-400 text-sm mt-1">{dict.settings.tryDifferent}</p>
                                 </div>
                             ) : (
                                 <div className="space-y-4">
@@ -224,6 +226,7 @@ export default function DeletePartnerSettings({ partners }: { partners: Partner[
                                                         handleDelete(partner.id, partner.name);
                                                     }}
                                                     disabled={isDeleting === partner.id || isBulkDeleting}
+                                                    title={`Delete ${partner.name}`}
                                                     className="opacity-0 group-hover:opacity-100 bg-white text-rose-500 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 p-2.5 rounded-xl transition-all disabled:opacity-50"
                                                 >
                                                     <Trash2 className="w-5 h-5" />
@@ -239,14 +242,14 @@ export default function DeletePartnerSettings({ partners }: { partners: Partner[
                         {selectedIds.length > 0 && (
                             <div className="px-8 py-5 border-t border-slate-100 bg-rose-50/30 flex items-center justify-between shrink-0">
                                 <p className="text-rose-900 font-extrabold text-sm">
-                                    Caution: Deleting {selectedIds.length} partners will remove all histories.
+                                    {dict.settings.cautionBulkDelete.replace('{count}', selectedIds.length.toString())}
                                 </p>
                                 <button
                                     onClick={handleBulkDelete}
                                     disabled={isBulkDeleting}
                                     className="bg-rose-600 hover:bg-rose-700 text-white px-8 py-3 rounded-2xl flex items-center justify-center gap-2 font-black transition-all shadow-xl shadow-rose-600/20 active:scale-95 disabled:opacity-50"
                                 >
-                                    Confirm Bulk Delete
+                                    {dict.settings.confirmBulkDelete}
                                 </button>
                             </div>
                         )}

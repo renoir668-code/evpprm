@@ -29,6 +29,13 @@ export interface User {
     role: string;
     password_hash?: string;
     created_at?: string;
+    linked_key_person?: string | null;
+}
+
+export interface Workgroup {
+    id: string;
+    name: string;
+    member_ids: string[]; // User IDs
 }
 
 export interface Tag {
@@ -68,3 +75,4 @@ export interface CustomReminder {
     created_at?: string;
     completed_at?: string | null;
 }
+export type Dictionary = any; // Placeholder for i18n dictionary

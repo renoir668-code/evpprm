@@ -3,10 +3,12 @@ export const dynamic = 'force-dynamic';
 import { AnalyticsCharts } from './AnalyticsCharts';
 import { Partner, Interaction } from '@/lib/types';
 import { PieChart as PieChartIcon, TrendingUp, Users as UsersIcon, Activity } from 'lucide-react';
+import { getDict } from '@/lib/i18n';
 
 export default async function AnalyticsPage() {
     const partners = await getPartners();
     const settings = await getSettings();
+    const dict = await getDict();
     const teamSetting = settings.find(s => s.key === 'team')?.value || 'Admin, Sales, Support';
     const availableTeam = teamSetting.split(',').map(s => s.trim()).filter(Boolean);
 
@@ -30,20 +32,20 @@ export default async function AnalyticsPage() {
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700 ease-out pb-8">
             <div className="relative">
                 <div className="absolute -inset-4 bg-gradient-to-r from-teal-500/10 to-emerald-500/10 rounded-3xl blur-2xl -z-10" />
-                <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 drop-shadow-sm">Analytics & Reporting</h1>
-                <p className="text-slate-500 mt-2 text-lg font-medium">Deep-dive into ecosystem metrics and engagement.</p>
+                <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 drop-shadow-sm">{dict.analytics.title}</h1>
+                <p className="text-slate-500 mt-2 text-lg font-medium">{dict.analytics.subtitle}</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <MetricCard icon={UsersIcon} label="Total Partners" value={totalPartners} color="bg-indigo-50" textColor="text-indigo-600" />
-                <MetricCard icon={Activity} label="Active Status" value={activePartners} color="bg-emerald-50" textColor="text-emerald-600" />
-                <MetricCard icon={PieChartIcon} label="Total Interactions" value={flatInteractions.length} color="bg-amber-50" textColor="text-amber-600" />
-                <MetricCard icon={TrendingUp} label="30-Day Engaged" value={uniqueEngaged} color="bg-purple-50" textColor="text-purple-600" />
+                <MetricCard icon={UsersIcon} label={dict.analytics.totalPartners} value={totalPartners} color="bg-indigo-50" textColor="text-indigo-600" />
+                <MetricCard icon={Activity} label={dict.analytics.activeStatus} value={activePartners} color="bg-emerald-50" textColor="text-emerald-600" />
+                <MetricCard icon={PieChartIcon} label={dict.analytics.totalInteractions} value={flatInteractions.length} color="bg-amber-50" textColor="text-amber-600" />
+                <MetricCard icon={TrendingUp} label={dict.analytics.thirtyDayEngaged} value={uniqueEngaged} color="bg-purple-50" textColor="text-purple-600" />
             </div>
 
             <div className="glass-card rounded-[32px] overflow-hidden p-8 border border-white/60">
-                <h2 className="text-xl font-bold text-slate-800 mb-6">Pipeline & Engagement Metrics</h2>
-                <AnalyticsCharts partners={partners} interactions={flatInteractions} availableTeam={availableTeam} />
+                <h2 className="text-xl font-bold text-slate-800 mb-6">{dict.analytics.pipelineEngagement}</h2>
+                <AnalyticsCharts partners={partners} interactions={flatInteractions} availableTeam={availableTeam} dict={dict} />
             </div>
         </div>
     );
