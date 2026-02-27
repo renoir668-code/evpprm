@@ -1,4 +1,4 @@
-import { getPartners, getCustomReminders, getSettings, getCurrentUserDetails } from '@/lib/actions';
+import { getPartners, getCustomReminders, getSettings, getCurrentUserDetails, getUsers } from '@/lib/actions';
 export const dynamic = 'force-dynamic';
 import { Calendar, Users } from 'lucide-react';
 import { ReminderFilter } from './ReminderFilter';
@@ -16,8 +16,21 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
 
     // User's relevant identifiers
     const userKP = userDetails?.linked_key_person;
-    const userGroupIds = userDetails?.workgroups.map(g => g.id) || [];
     const isAdmin = userDetails?.role === 'Admin';
+
+    // Get workgroup partners
+    const allUsers = await getUsers();
+    const teamKPs = new Set<string>();
+    if (userDetails) {
+        for (const wg of userDetails.workgroups) {
+            for (const memberId of wg.member_ids) {
+                const u = allUsers.find(x => x.id === memberId);
+                if (u && u.linked_key_person) {
+                    teamKPs.add(u.linked_key_person);
+                }
+            }
+        }
+    }
 
     const teamSetting = settings.find((s) => s.key === 'team')?.value || 'Admin, Sales, Support';
     const availableTeam = teamSetting.split(',').map((s) => s.trim()).filter(Boolean);
@@ -71,14 +84,27 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
         })
         .filter(group => group.customReminders.length > 0 || group.attentionReminder !== null);
 
-    const personalReminders = allReminders.filter(g => {
-        if (owner) return g.partner.key_person_id === owner;
+    // Initial filtering based on permissions
+    let filteredReminders = allReminders.filter(g => {
+        if (!isAdmin && !userKP && teamKPs.size === 0) return false;
+        if (isAdmin) return true;
+        const isPersonal = userKP && g.partner.key_person_id === userKP;
+        const isTeam = g.partner.key_person_id && teamKPs.has(g.partner.key_person_id);
+        return isPersonal || isTeam;
+    });
+
+    // Apply the dropdown filter
+    if (owner) {
+        filteredReminders = filteredReminders.filter(g => g.partner.key_person_id === owner);
+    }
+
+    // Split into categories
+    const personalReminders = filteredReminders.filter(g => {
         return userKP && g.partner.key_person_id === userKP;
     });
 
-    const teamReminders = allReminders.filter(g => {
-        if (owner) return false; // If filtering by owner, only show that owner's
-        return userGroupIds.includes(g.partner.key_person_id || '') && g.partner.key_person_id !== userKP;
+    const teamReminders = filteredReminders.filter(g => {
+        return g.partner.key_person_id !== userKP;
     });
 
     const sortFn = (a: any, b: any) => {

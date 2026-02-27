@@ -1,4 +1,4 @@
-import { getPartners, getInteractions, getCustomReminders, getRecentInteractions, getCurrentUserDetails } from '@/lib/actions';
+import { getPartners, getInteractions, getCustomReminders, getRecentInteractions, getCurrentUserDetails, getUsers } from '@/lib/actions';
 export const dynamic = 'force-dynamic';
 import { Users, AlertTriangle, CheckCircle, Handshake, ArrowRight, Calendar, MessageSquare, Clock, Phone, Mail } from 'lucide-react';
 import Link from 'next/link';
@@ -10,14 +10,26 @@ export default async function Dashboard() {
   const allPartners = await getPartners();
   const userDetails = await getCurrentUserDetails();
   const userKP = userDetails?.linked_key_person;
-  const userGroupIds = userDetails?.workgroups.map(g => g.id) || [];
   const isAdmin = userDetails?.role === 'Admin';
+
+  const allUsers = await getUsers();
+  const teamKPs = new Set<string>();
+  if (userDetails) {
+    for (const wg of userDetails.workgroups) {
+      for (const memberId of wg.member_ids) {
+        const u = allUsers.find(x => x.id === memberId);
+        if (u && u.linked_key_person) {
+          teamKPs.add(u.linked_key_person);
+        }
+      }
+    }
+  }
 
   // Filter partners based on user context
   const partners = allPartners.filter(p => {
     if (isAdmin) return true; // Admins see all
     const isPersonal = userKP && p.key_person_id === userKP;
-    const isWorkgroup = userGroupIds.includes(p.key_person_id || '');
+    const isWorkgroup = p.key_person_id && teamKPs.has(p.key_person_id);
     return isPersonal || isWorkgroup;
   });
 
