@@ -18,11 +18,16 @@ export default async function Dashboard() {
     for (const wg of userDetails.workgroups) {
       for (const memberId of wg.member_ids) {
         const u = allUsers.find(x => x.id === memberId);
-        if (u && u.linked_key_person) {
-          teamKPs.add(u.linked_key_person);
+        if (u) {
+          const kp = u.linked_key_person || u.name;
+          if (kp) teamKPs.add(kp);
         }
       }
     }
+  }
+
+  if (userKP) {
+    teamKPs.add(userKP);
   }
 
   // Filter partners based on user context
