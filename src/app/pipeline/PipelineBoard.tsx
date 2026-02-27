@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Partner, ProductIntegration } from '@/lib/types';
 import { updatePartnerProducts } from '@/lib/actions';
 import { cn } from '@/lib/utils';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, Search, X } from 'lucide-react';
 
 import { Tag, Dictionary } from '@/lib/types';
 
@@ -21,6 +21,7 @@ const COLUMNS = [
 export function PipelineBoard({ initialPartners, dict }: { initialPartners: Partner[], dict: Dictionary }) {
     const [partners, setPartners] = useState(initialPartners);
     const [draggedId, setDraggedId] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
 
     const pipelineItems = partners.flatMap(p => {
         let prods: ProductIntegration[] = [];
@@ -91,80 +92,109 @@ export function PipelineBoard({ initialPartners, dict }: { initialPartners: Part
         }
     };
 
+    const filteredItems = pipelineItems.filter(p => !searchQuery || p.partnerName.toLowerCase().includes(searchQuery.toLowerCase()));
+
     return (
-        <div className="flex gap-6 overflow-x-auto pb-8 pt-4 h-[calc(100vh-200px)]">
-            {COLUMNS.map(col => {
-                const colItems = pipelineItems.filter(p => p.status === col.id);
-
-                return (
-                    <div
-                        key={col.id}
-                        className={cn(
-                            "flex-shrink-0 w-80 rounded-2xl p-4 flex flex-col h-full border border-slate-200/50 shadow-sm transition-colors",
-                            col.color
-                        )}
-                        onDragOver={(e) => handleDragOver(e, col.id)}
-                        onDrop={(e) => handleDrop(e, col.id)}
-                    >
-                        <div className="flex justify-between items-center mb-4 px-1">
-                            <h3 className="font-bold text-slate-700 tracking-tight">{(dict.common as any)[col.dictKey]}</h3>
-                            <span className="text-xs font-bold bg-white/60 text-slate-500 px-2 py-1 rounded-full shadow-sm">
-                                {colItems.length}
-                            </span>
-                        </div>
-
-                        <div className="flex-1 overflow-y-auto space-y-3 p-1">
-                            {colItems.map(p => (
-                                <div
-                                    key={p.id}
-                                    draggable
-                                    onDragStart={(e) => handleDragStart(e, p.id)}
-                                    onDragEnd={() => setDraggedId(null)}
-                                    className={cn(
-                                        "bg-white p-4 rounded-xl shadow-sm border border-slate-100 cursor-grab active:cursor-grabbing hover:shadow-md transition-all group relative",
-                                        draggedId === p.id && "opacity-50 scale-95"
-                                    )}
-                                >
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <div className="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
-                                            {p.partner.logo_url ? (
-                                                <img src={p.partner.logo_url} alt={p.partnerName} className="w-full h-full object-cover" />
-                                            ) : (
-                                                <span className="text-indigo-600 font-bold text-[10px]">
-                                                    {p.partnerName.charAt(0).toUpperCase()}
-                                                </span>
-                                            )}
-                                        </div>
-                                        <h4 className="font-bold text-slate-800 text-sm truncate">{p.partnerName}</h4>
-                                    </div>
-                                    <div className="flex flex-wrap gap-1 mb-3">
-                                        <span className={cn(
-                                            "text-[10px] font-bold px-2 py-0.5 rounded-md",
-                                            p.health_status === 'Active' ? 'bg-emerald-100 text-emerald-700' :
-                                                p.health_status === 'At Risk' ? 'bg-amber-100 text-amber-700' :
-                                                    'bg-slate-200 text-slate-600'
-                                        )}>
-                                            {p.health_status === 'Active' ? dict.common.active :
-                                                p.health_status === 'At Risk' ? dict.common.atRisk :
-                                                    p.health_status === 'Dormant' ? dict.common.dormant :
-                                                        p.health_status}
-                                        </span>
-                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-600 truncate max-w-[120px]">
-                                            {p.product}
-                                        </span>
-                                    </div>
-                                    <button
-                                        className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-slate-600 transition-opacity"
-                                        title={dict.common.edit}
-                                    >
-                                        <MoreHorizontal className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
+        <div className="flex flex-col h-full">
+            <div className="mb-6 max-w-md w-full">
+                <div className="flex bg-white/60 backdrop-blur-md border border-slate-200 rounded-xl overflow-hidden shadow-sm focus-within:ring-4 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 transition-all">
+                    <div className="pl-4 flex items-center justify-center">
+                        <Search className="w-5 h-5 text-slate-400" />
                     </div>
-                );
-            })}
+                    <input
+                        type="text"
+                        className="w-full py-2.5 px-3 outline-none text-slate-700 bg-transparent placeholder:text-slate-400 font-medium text-sm"
+                        placeholder="Filter by partner..."
+                        title="Search partners"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    {searchQuery && (
+                        <button
+                            onClick={() => setSearchQuery('')}
+                            className="pr-4 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
+                            title={dict.common.clear || "Clear search"}
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            <div className="flex gap-6 overflow-x-auto pb-8 flex-1 h-[calc(100vh-270px)]">
+                {COLUMNS.map(col => {
+                    const colItems = filteredItems.filter(p => p.status === col.id);
+
+                    return (
+                        <div
+                            key={col.id}
+                            className={cn(
+                                "flex-shrink-0 w-80 rounded-2xl p-4 flex flex-col h-full border border-slate-200/50 shadow-sm transition-colors",
+                                col.color
+                            )}
+                            onDragOver={(e) => handleDragOver(e, col.id)}
+                            onDrop={(e) => handleDrop(e, col.id)}
+                        >
+                            <div className="flex justify-between items-center mb-4 px-1">
+                                <h3 className="font-bold text-slate-700 tracking-tight">{(dict.common as any)[col.dictKey]}</h3>
+                                <span className="text-xs font-bold bg-white/60 text-slate-500 px-2 py-1 rounded-full shadow-sm">
+                                    {colItems.length}
+                                </span>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto space-y-3 p-1">
+                                {colItems.map(p => (
+                                    <div
+                                        key={p.id}
+                                        draggable
+                                        onDragStart={(e) => handleDragStart(e, p.id)}
+                                        onDragEnd={() => setDraggedId(null)}
+                                        className={cn(
+                                            "bg-white p-4 rounded-xl shadow-sm border border-slate-100 cursor-grab active:cursor-grabbing hover:shadow-md transition-all group relative",
+                                            draggedId === p.id && "opacity-50 scale-95"
+                                        )}
+                                    >
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <div className="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
+                                                {p.partner.logo_url ? (
+                                                    <img src={p.partner.logo_url} alt={p.partnerName} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <span className="text-indigo-600 font-bold text-[10px]">
+                                                        {p.partnerName.charAt(0).toUpperCase()}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <h4 className="font-bold text-slate-800 text-sm truncate">{p.partnerName}</h4>
+                                        </div>
+                                        <div className="flex flex-wrap gap-1 mb-3">
+                                            <span className={cn(
+                                                "text-[10px] font-bold px-2 py-0.5 rounded-md",
+                                                p.health_status === 'Active' ? 'bg-emerald-100 text-emerald-700' :
+                                                    p.health_status === 'At Risk' ? 'bg-amber-100 text-amber-700' :
+                                                        'bg-slate-200 text-slate-600'
+                                            )}>
+                                                {p.health_status === 'Active' ? dict.common.active :
+                                                    p.health_status === 'At Risk' ? dict.common.atRisk :
+                                                        p.health_status === 'Dormant' ? dict.common.dormant :
+                                                            p.health_status}
+                                            </span>
+                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-600 truncate max-w-[120px]">
+                                                {p.product}
+                                            </span>
+                                        </div>
+                                        <button
+                                            className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-slate-600 transition-opacity"
+                                            title={dict.common.edit}
+                                        >
+                                            <MoreHorizontal className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
         </div>
     );
 }

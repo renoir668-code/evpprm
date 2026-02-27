@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { X } from 'lucide-react';
 import { createPartner } from '@/lib/actions';
 
-export default function CreatePartnerModal({ isOpen, onClose, dict }: { isOpen: boolean; onClose: () => void, dict: any }) {
+export default function CreatePartnerModal({ isOpen, onClose, dict, defaultUseCase }: { isOpen: boolean; onClose: () => void, dict: any, defaultUseCase?: string }) {
     const [name, setName] = useState('');
     const [logoUrl, setLogoUrl] = useState('');
     const [needsAttentionDays, setNeedsAttentionDays] = useState(30);
@@ -21,6 +21,7 @@ export default function CreatePartnerModal({ isOpen, onClose, dict }: { isOpen: 
             key_person_id: null,
             needs_attention_days: needsAttentionDays,
             owner_id: null,
+            use_case: defaultUseCase || null,
             logo_url: logoUrl || null
         });
         setName('');

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Users, Calendar, Settings, CreditCard, LogOut, PanelLeft, KanbanSquare, PieChart, Globe } from 'lucide-react';
+import { LayoutDashboard, Users, Calendar, Settings, CreditCard, LogOut, PanelLeft, KanbanSquare, PieChart, Globe, Store } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { logout } from '@/app/login/actions';
 
@@ -18,6 +18,7 @@ export function Sidebar({ userName, userRole, dict, initialLang }: { userName?: 
     const navItems = [
         { label: dict.sidebar.dashboard, icon: LayoutDashboard, href: '/' },
         { label: dict.sidebar.directory, icon: Users, href: '/directory' },
+        { label: dict.sidebar.merchants, icon: Store, href: '/merchants' },
         { label: dict.sidebar.pipeline, icon: KanbanSquare, href: '/pipeline' },
         { label: dict.sidebar.reminders, icon: Calendar, href: '/reminders' },
         { label: dict.sidebar.analytics, icon: PieChart, href: '/analytics' },

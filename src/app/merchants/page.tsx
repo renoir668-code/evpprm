@@ -6,13 +6,22 @@ import { getSession } from '@/lib/auth';
 import { getDict } from '@/lib/i18n';
 export type PartnerWithTags = Partner & { tags: Tag[] };
 
-export default async function DirectoryPage() {
+export default async function MerchantsPage() {
     const session = await getSession();
     const isAdmin = session?.role === 'Admin';
-    const dict = await getDict();
+    const originalDict = await getDict();
+    const dict = {
+        ...originalDict,
+        directory: {
+            ...originalDict.directory,
+            title: originalDict.sidebar.merchants,
+            subtitle: originalDict.directory.subtitle,
+            addPartner: originalDict.sidebar.merchants,
+        }
+    };
 
     const rawPartners = await getPartners();
-    const partners = rawPartners.filter(p => p.use_case !== 'Merchant');
+    const partners = rawPartners.filter(p => p.use_case === 'Merchant');
     const tags = await getTags();
     const settings = await getSettings();
 
@@ -45,6 +54,7 @@ export default async function DirectoryPage() {
                 availableVerticals={availableVerticals}
                 isAdmin={isAdmin}
                 dict={dict}
+                defaultUseCase="Merchant"
             />
         </div>
     );

@@ -19,7 +19,8 @@ export default function PartnerList({
     availableTeam,
     availableVerticals,
     isAdmin,
-    dict
+    dict,
+    defaultUseCase
 }: {
     initialPartners: PartnerWithTags[];
     allTags: Tag[];
@@ -28,6 +29,7 @@ export default function PartnerList({
     availableVerticals: string[];
     isAdmin?: boolean;
     dict: Dictionary;
+    defaultUseCase?: string;
 }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedVertical, setSelectedVertical] = useState<string>('');
@@ -360,6 +362,7 @@ export default function PartnerList({
                 isOpen={isCreateModalOpen}
                 onClose={() => setIsCreateModalOpen(false)}
                 dict={dict}
+                defaultUseCase={defaultUseCase}
             />
         </div>
     );

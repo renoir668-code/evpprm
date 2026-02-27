@@ -35,6 +35,7 @@ export const dictionaries = {
             reminders: 'Reminders',
             analytics: 'Analytics',
             settings: 'Settings',
+            merchants: 'Merchants',
             signOut: 'Sign Out'
         },
         dashboard: {
@@ -219,9 +220,10 @@ export const dictionaries = {
             directory: 'Diretório',
             pipeline: 'Pipeline',
             reminders: 'Lembretes',
-            analytics: 'Analytics',
+            analytics: 'Análises',
             settings: 'Definições',
-            signOut: 'Sair'
+            merchants: 'Comerciantes',
+            signOut: 'Terminar Sessão'
         },
         dashboard: {
             title: 'Dashboard',
@@ -245,7 +247,7 @@ export const dictionaries = {
         },
         directory: {
             title: 'Diretório de Parceiros',
-            subtitle: 'Consulte e gira todas as suas parcerias.',
+            subtitle: 'Navegue e gira todas as suas parcerias.',
             addPartner: 'Adicionar Parceiro',
             searchPlaceholder: 'Procurar parceiros por nome...',
             allStatuses: 'Todos os Estados',
