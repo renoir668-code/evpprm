@@ -19,6 +19,7 @@ export interface Partner {
     use_case?: string | null;
     last_interaction_date?: string | null;
     logo_url?: string | null;
+    dismissed_at?: string | null;
 }
 
 export interface User {

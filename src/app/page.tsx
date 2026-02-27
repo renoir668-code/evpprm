@@ -17,15 +17,25 @@ export default async function Dashboard() {
   const needingAttention = [];
 
   for (const p of partners) {
-    if (p.health_status === 'Dormant') continue; // Usually dormant don't need attention
+    if (p.health_status === 'Dormant') continue;
 
-    const interactions = await getInteractions(p.id);
-    const lastInteraction = interactions[0]; // ordered by date DESC
+    const lastInteractionStr = p.last_interaction_date;
+    const dismissedAtStr = p.dismissed_at;
+
+    let lastTouch = null;
+    if (lastInteractionStr && dismissedAtStr) {
+      const lid = new Date(lastInteractionStr);
+      const dat = new Date(dismissedAtStr);
+      lastTouch = lid > dat ? lid : dat;
+    } else if (lastInteractionStr) {
+      lastTouch = new Date(lastInteractionStr);
+    } else if (dismissedAtStr) {
+      lastTouch = new Date(dismissedAtStr);
+    }
 
     let daysSinceLast = Infinity;
-    if (lastInteraction) {
-      const lastDate = new Date(lastInteraction.date);
-      daysSinceLast = Math.floor((now.getTime() - lastDate.getTime()) / (1000 * 3600 * 24));
+    if (lastTouch) {
+      daysSinceLast = Math.floor((now.getTime() - lastTouch.getTime()) / (1000 * 3600 * 24));
     }
 
     if (daysSinceLast > p.needs_attention_days) {

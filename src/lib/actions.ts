@@ -22,7 +22,8 @@ export async function getPartners(): Promise<Partner[]> {
     const formatted = res.rows.map((row: any) => ({
         ...row,
         created_at: new Date(row.created_at).toISOString(),
-        last_interaction_date: row.last_interaction_date ? new Date(row.last_interaction_date).toISOString() : null
+        last_interaction_date: row.last_interaction_date ? new Date(row.last_interaction_date).toISOString() : null,
+        dismissed_at: row.dismissed_at ? new Date(row.dismissed_at).toISOString() : null
     }));
     return formatted as Partner[];
 }
@@ -86,6 +87,13 @@ export async function updatePartner(id: string, data: Partial<Partner>) {
 
     revalidatePath('/');
     revalidatePath('/directory');
+    revalidatePath(`/partners/${id}`);
+}
+
+export async function dismissPartnerReminder(id: string) {
+    await query('UPDATE partners SET dismissed_at = CURRENT_TIMESTAMP WHERE id = $1', [id]);
+    revalidatePath('/');
+    revalidatePath('/reminders');
     revalidatePath(`/partners/${id}`);
 }
 
