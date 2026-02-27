@@ -87,8 +87,8 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
                         <div className="w-20 h-20 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center mx-auto mb-6 shadow-inner ring-8 ring-white">
                             <Calendar className="w-10 h-10" />
                         </div>
-                        <p className="font-extrabold text-slate-900 text-2xl">All caught up!</p>
-                        <p className="text-slate-500 mt-3 max-w-sm mx-auto text-lg italic">"The best way to predict the future is to create it."</p>
+                        <p className="font-extrabold text-slate-900 text-2xl">You're all caught up!</p>
+                        <p className="text-slate-500 mt-2 text-lg font-medium">No partners require immediate follow-up today.</p>
                     </div>
                 ) : (
                     <div className="divide-y divide-slate-100">
