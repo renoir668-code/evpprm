@@ -114,8 +114,13 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
         })
         .filter(group => group.customReminders.length > 0 || group.attentionReminder !== null);
 
-    // Initial filtering based on visibility (Admin sees all, User sees self + team)
-    let filteredReminders = allReminders.filter(g => {
+    const viewingKP = (owner || userDetails?.name || '').toLowerCase();
+    const viewingUserIds = owner
+        ? (nameToUserIds[owner.toLowerCase()] || [])
+        : [userDetails?.id].filter(Boolean) as string[];
+
+    // Visibility remains tied to the logged-in user's permissions
+    const filteredReminders = allReminders.filter(g => {
         if (isAdmin) return true;
         if (!userDetails) return false;
 
@@ -128,42 +133,26 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
         return isAssignedToMeOrTeam || isOwnedByMeOrTeam;
     });
 
-    // Apply the dropdown filter (Hierarchy: Match Name string OR Ownership by user with that name)
-    if (owner) {
-        const ownerLower = owner.toLowerCase();
-        const linkedUserIds = nameToUserIds[ownerLower] || [];
-
-        filteredReminders = filteredReminders.filter(g => {
-            const partnerKP = g.partner.key_person_id?.toLowerCase();
-            const partnerOwnerId = g.partner.owner_id;
-
-            const matchesKP = partnerKP === ownerLower;
-            const matchesOwnerHierarchy = partnerOwnerId && linkedUserIds.includes(partnerOwnerId);
-
-            return matchesKP || matchesOwnerHierarchy;
-        });
-    }
-
-    // Split into categories (Personal vs Team)
+    // Split into categories based on the VIEWING identity (Filter or Self)
     const personalReminders = filteredReminders.filter(g => {
         const partnerKP = g.partner.key_person_id?.toLowerCase();
         const partnerOwnerId = g.partner.owner_id;
 
-        const isMyKP = partnerKP && userKP && partnerKP === userKP;
-        const isMyOwnership = partnerOwnerId === userDetails?.id;
+        const isFocusKP = partnerKP && partnerKP === viewingKP;
+        const isFocusOwnership = partnerOwnerId && viewingUserIds.includes(partnerOwnerId);
 
-        return isMyKP || isMyOwnership;
+        return isFocusKP || isFocusOwnership;
     });
 
     const teamReminders = filteredReminders.filter(g => {
         const partnerKP = g.partner.key_person_id?.toLowerCase();
         const partnerOwnerId = g.partner.owner_id;
 
-        const isMyKP = partnerKP && userKP && partnerKP === userKP;
-        const isMyOwnership = partnerOwnerId === userDetails?.id;
+        const isFocusKP = partnerKP && partnerKP === viewingKP;
+        const isFocusOwnership = partnerOwnerId && viewingUserIds.includes(partnerOwnerId);
 
-        // If it's in personal, don't show in team section
-        return !(isMyKP || isMyOwnership);
+        // If it belongs to the focus person, don't show in team section
+        return !(isFocusKP || isFocusOwnership);
     });
 
     const sortFn = (a: any, b: any) => {
