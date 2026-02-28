@@ -166,17 +166,6 @@ export async function initDb(): Promise<void> {
       )
     `);
 
-    sqliteDb.exec(`
-      CREATE TABLE IF NOT EXISTS web_push_subscriptions (
-        id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        endpoint TEXT NOT NULL,
-        p256dh TEXT NOT NULL,
-        auth TEXT NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
     try {
       sqliteDb.exec('ALTER TABLE interactions ADD COLUMN created_by TEXT REFERENCES users(id) ON DELETE SET NULL');
     } catch (e) { }
@@ -317,17 +306,6 @@ export async function initDb(): Promise<void> {
         user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
         action TEXT NOT NULL,
         details TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS web_push_subscriptions (
-        id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        endpoint TEXT NOT NULL,
-        p256dh TEXT NOT NULL,
-        auth TEXT NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);

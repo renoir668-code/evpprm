@@ -7,7 +7,6 @@ import { cn } from '@/lib/utils';
 import { logout } from '@/app/login/actions';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
-import { NotificationManager } from '@/components/NotificationManager';
 
 export function Sidebar({ userName, userRole, dict, initialLang }: { userName?: string, userRole?: string, dict: any, initialLang: string }) {
     const pathname = usePathname();
@@ -127,7 +126,6 @@ export function Sidebar({ userName, userRole, dict, initialLang }: { userName?: 
                         <div className="px-5 py-2">
                             <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{userName || 'User'}</p>
                             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-3">{userRole || 'Member'}</p>
-                            <NotificationManager />
                         </div>
                         <form action={logout}>
                             <button

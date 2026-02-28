@@ -311,7 +311,7 @@ export const dictionaries = {
             searchPlaceholder: 'Procurar parceiros por nome...',
             allStatuses: 'Todos os Estados',
             allTags: 'Todas as Etiquetas',
-            allVerticals: 'Todas as Verticais',
+            allVerticals: 'Todos os Verticais',
             allProducts: 'Todos os Produtos',
             allTeamMembers: 'Toda a Equipa',
             allPartners: 'Todos os Parceiros/Comerciantes',
