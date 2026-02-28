@@ -10,8 +10,8 @@ export default async function PipelinePage() {
     return (
         <div className="space-y-6 h-full flex flex-col pt-4">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight text-slate-900">{dict.pipeline.title}</h1>
-                <p className="text-slate-500 mt-2">{dict.pipeline.subtitle}</p>
+                <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{dict.pipeline.title}</h1>
+                <p className="text-slate-500 dark:text-slate-400 mt-2">{dict.pipeline.subtitle}</p>
             </div>
 
             <PipelineBoard initialPartners={partners} dict={dict} />

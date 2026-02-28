@@ -3,6 +3,7 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList, Cell, PieChart, Pie } from 'recharts';
 import { Partner, Interaction, Dictionary } from '@/lib/types';
 import { useMemo, useState } from 'react';
+import { parseProducts } from '@/lib/helpers';
 
 const COLORS = ['#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#64748b'];
 
@@ -52,8 +53,7 @@ export function AnalyticsCharts({
     // Status distribution
     const statusData = useMemo(() => {
         const counts = filteredPartners.reduce((acc, current) => {
-            let prods: any[] = [];
-            try { prods = JSON.parse(current.integration_products || '[]'); } catch { }
+            let prods = parseProducts(current.integration_products);
             if (prods.length === 0) {
                 acc['No'] = (acc['No'] || 0) + 1;
             } else {
@@ -104,8 +104,7 @@ export function AnalyticsCharts({
                 countsByVertical[vertical] = { Finished: 0, 'In Pipeline': 0 };
             }
 
-            let prods: any[] = [];
-            try { prods = JSON.parse(p.integration_products || '[]'); } catch { }
+            let prods = parseProducts(p.integration_products);
 
             prods.forEach(prod => {
                 if (prod.status === 'Finished') countsByVertical[vertical].Finished++;
@@ -125,8 +124,7 @@ export function AnalyticsCharts({
         const productCounts: Record<string, number> = {};
 
         filteredPartners.forEach(p => {
-            let prods: any[] = [];
-            try { prods = JSON.parse(p.integration_products || '[]'); } catch { }
+            let prods = parseProducts(p.integration_products);
 
             prods.forEach(prod => {
                 if (prod.status === 'Finished') {
@@ -156,22 +154,22 @@ export function AnalyticsCharts({
 
         const data = Object.entries(counts).map(([name, total]) => ({
             name,
-            [dict.analytics.partnersAssigned]: total
-        })).sort((a, b) => b[dict.analytics.partnersAssigned] - a[dict.analytics.partnersAssigned]);
+            count: total
+        })).sort((a, b) => b.count - a.count);
 
         if (unassigned > 0) {
-            data.push({ name: dict.common.unassigned, [dict.analytics.partnersAssigned]: unassigned });
+            data.push({ name: dict.common.unassigned, count: unassigned });
         }
 
         return data;
-    }, [filteredPartners, dict.analytics.partnersAssigned, dict.common.unassigned]);
+    }, [filteredPartners, dict.common.unassigned]);
 
     return (
         <div className="space-y-6">
             <div className="flex flex-wrap gap-4">
                 <select
                     title={dict.analytics.last30Days}
-                    className="bg-white/60 backdrop-blur-md border border-white rounded-xl px-4 py-3 shadow-sm outline-none text-slate-700 font-medium focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
+                    className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white dark:border-slate-800 rounded-xl px-4 py-3 shadow-sm outline-none text-slate-700 dark:text-slate-200 font-medium focus:ring-4 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/40 focus:border-indigo-500 cursor-pointer"
                     value={timelineDays}
                     onChange={e => setTimelineDays(Number(e.target.value))}
                 >
@@ -183,7 +181,7 @@ export function AnalyticsCharts({
 
                 <select
                     title={dict.directory.allTeamMembers}
-                    className="bg-white/60 backdrop-blur-md border border-white rounded-xl px-4 py-3 shadow-sm outline-none text-slate-700 font-medium focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
+                    className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white dark:border-slate-800 rounded-xl px-4 py-3 shadow-sm outline-none text-slate-700 dark:text-slate-200 font-medium focus:ring-4 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/40 focus:border-indigo-500 cursor-pointer"
                     value={selectedTeamMember}
                     onChange={e => setSelectedTeamMember(e.target.value)}
                 >
@@ -193,7 +191,7 @@ export function AnalyticsCharts({
 
                 <select
                     title={dict.analytics.allPartners}
-                    className="bg-white/60 backdrop-blur-md border border-white rounded-xl px-4 py-3 shadow-sm outline-none text-slate-700 font-medium focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
+                    className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white dark:border-slate-800 rounded-xl px-4 py-3 shadow-sm outline-none text-slate-700 dark:text-slate-200 font-medium focus:ring-4 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/40 focus:border-indigo-500 cursor-pointer"
                     value={selectedPartnerId}
                     onChange={e => setSelectedPartnerId(e.target.value)}
                 >
@@ -203,7 +201,7 @@ export function AnalyticsCharts({
 
                 <select
                     title={dict.analytics.allVerticals}
-                    className="bg-white/60 backdrop-blur-md border border-white rounded-xl px-4 py-3 shadow-sm outline-none text-slate-700 font-medium focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
+                    className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white dark:border-slate-800 rounded-xl px-4 py-3 shadow-sm outline-none text-slate-700 dark:text-slate-200 font-medium focus:ring-4 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/40 focus:border-indigo-500 cursor-pointer"
                     value={selectedVertical}
                     onChange={e => setSelectedVertical(e.target.value)}
                 >
@@ -213,8 +211,8 @@ export function AnalyticsCharts({
             </div>
 
             <div className={`grid grid-cols-1 gap-8 ${selectedPartnerId === '' ? '' : 'lg:grid-cols-2'}`}>
-                <div className="bg-white/40 p-6 rounded-2xl border border-white/50 shadow-sm">
-                    <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                <div className="bg-white/40 dark:bg-slate-900/40 p-6 rounded-2xl border border-white/50 dark:border-slate-700/50 shadow-sm">
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-indigo-500" />
                         {dict.analytics.integrationStatus}
                     </h3>
@@ -244,10 +242,10 @@ export function AnalyticsCharts({
                     </div>
                     <div className="flex flex-wrap gap-4 mt-6 justify-center">
                         {statusData.map((entry, index) => (
-                            <div key={entry.name} className="flex items-center gap-2 text-sm font-bold text-slate-600">
+                            <div key={entry.name} className="flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-slate-300">
                                 <div
                                     className="w-3 h-3 rounded-full"
-                                    data-color={COLORS[index % COLORS.length]}
+                                    style={{ backgroundColor: COLORS[index % COLORS.length] }}
                                 />
                                 {entry.name === 'No' ? dict.common.notStarted :
                                     entry.name === 'Finished' ? dict.common.finished :
@@ -262,8 +260,8 @@ export function AnalyticsCharts({
                 </div>
 
                 {selectedPartnerId !== '' && (
-                    <div className="bg-white/40 p-6 rounded-2xl border border-white/50 shadow-sm">
-                        <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                    <div className="bg-white/40 dark:bg-slate-900/40 p-6 rounded-2xl border border-white/50 dark:border-slate-700/50 shadow-sm">
+                        <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
                             <div className="w-2 h-2 rounded-full bg-emerald-500" />
                             {dict.analytics.engagementVelocity} ({timelineDays} {dict.common.days})
                         </h3>
@@ -294,9 +292,9 @@ export function AnalyticsCharts({
                 )}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-8 border-t border-slate-200">
-                <div className="bg-white/40 p-6 rounded-2xl border border-white/50 shadow-sm">
-                    <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-8 border-t border-slate-200 dark:border-slate-700">
+                <div className="bg-white/40 dark:bg-slate-900/40 p-6 rounded-2xl border border-white/50 dark:border-slate-700/50 shadow-sm">
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-blue-500" />
                         {dict.analytics.integrationsByVertical}
                     </h3>
@@ -314,8 +312,8 @@ export function AnalyticsCharts({
                     </div>
                 </div>
 
-                <div className="bg-white/40 p-6 rounded-2xl border border-white/50 shadow-sm">
-                    <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                <div className="bg-white/40 dark:bg-slate-900/40 p-6 rounded-2xl border border-white/50 dark:border-slate-700/50 shadow-sm">
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-fuchsia-500" />
                         {dict.analytics.integrationsByProduct}
                     </h3>
@@ -334,8 +332,8 @@ export function AnalyticsCharts({
                     </div>
                 </div>
 
-                <div className="bg-white/40 p-6 rounded-2xl border border-white/50 shadow-sm">
-                    <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                <div className="bg-white/40 dark:bg-slate-900/40 p-6 rounded-2xl border border-white/50 dark:border-slate-700/50 shadow-sm">
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-amber-500" />
                         {dict.analytics.partnerDistribution}
                     </h3>
@@ -346,8 +344,8 @@ export function AnalyticsCharts({
                                 <XAxis type="number" hide />
                                 <YAxis dataKey="name" type="category" tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }} tickLine={false} axisLine={false} />
                                 <Tooltip cursor={{ fill: 'rgba(241, 245, 249, 0.5)' }} contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 4px 20px -2px rgba(0,0,0,0.1)' }} />
-                                <Bar dataKey={dict.analytics.partnersAssigned} fill="#3b82f6" radius={[0, 6, 6, 0]} maxBarSize={30}>
-                                    <LabelList dataKey={dict.analytics.partnersAssigned} position="right" fill="#3b82f6" fontSize={12} fontWeight={700} />
+                                <Bar dataKey="count" name={dict.analytics.partnersAssigned} fill="#3b82f6" radius={[0, 6, 6, 0]} maxBarSize={30}>
+                                    <LabelList dataKey="count" position="right" fill="#3b82f6" fontSize={12} fontWeight={700} />
                                 </Bar>
                             </BarChart>
                         </ResponsiveContainer>

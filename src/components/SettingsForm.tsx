@@ -42,13 +42,13 @@ export default function SettingsForm({
     return (
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
             <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">
                     {dict.settings.availableProducts}
                 </label>
-                <p className="text-xs text-slate-500 mb-2">{dict.settings.productsHelp}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">{dict.settings.productsHelp}</p>
                 <input
                     type="text"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-shadow text-slate-900"
+                    className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/40 focus:border-indigo-500 transition-shadow text-slate-900 dark:text-white"
                     placeholder={dict.settings.availableProducts}
                     title={dict.settings.availableProducts}
                     value={products}
@@ -57,13 +57,13 @@ export default function SettingsForm({
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">
                     {dict.settings.teamMembers}
                 </label>
-                <p className="text-xs text-slate-500 mb-2">{dict.settings.teamHelp}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">{dict.settings.teamHelp}</p>
                 <input
                     type="text"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-shadow text-slate-900"
+                    className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/40 focus:border-indigo-500 transition-shadow text-slate-900 dark:text-white"
                     placeholder={dict.settings.teamMembers}
                     title={dict.settings.teamMembers}
                     value={team}
@@ -72,13 +72,13 @@ export default function SettingsForm({
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">
                     {dict.settings.verticals}
                 </label>
-                <p className="text-xs text-slate-500 mb-2">{dict.settings.verticalsHelp}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">{dict.settings.verticalsHelp}</p>
                 <input
                     type="text"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-shadow text-slate-900"
+                    className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/40 focus:border-indigo-500 transition-shadow text-slate-900 dark:text-white"
                     placeholder={dict.settings.verticals}
                     title={dict.settings.verticals}
                     value={verticals}
@@ -87,13 +87,13 @@ export default function SettingsForm({
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">
                     {dict.settings.useCases}
                 </label>
-                <p className="text-xs text-slate-500 mb-2">{dict.settings.useCasesHelp}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">{dict.settings.useCasesHelp}</p>
                 <input
                     type="text"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-shadow text-slate-900"
+                    className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/40 focus:border-indigo-500 transition-shadow text-slate-900 dark:text-white"
                     placeholder={dict.settings.useCases}
                     title={dict.settings.useCases}
                     value={useCases}
@@ -101,7 +101,7 @@ export default function SettingsForm({
                 />
             </div>
 
-            <div className="pt-4 flex items-center justify-end border-t border-slate-100">
+            <div className="pt-4 flex items-center justify-end border-t border-slate-100 dark:border-slate-800">
                 <button
                     type="submit"
                     disabled={isSaving}

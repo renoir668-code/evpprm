@@ -57,30 +57,30 @@ export default function QuickActionForm({ partnerId, dict }: { partnerId: string
     };
 
     return (
-        <form onSubmit={handleSubmit} className="bg-white border text-sm border-slate-200 rounded-xl shadow-sm p-4 relative z-20">
+        <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-800 border text-sm border-slate-200 dark:border-slate-700 rounded-xl shadow-sm p-4 relative z-20">
             <div className="flex flex-col gap-3">
                 <textarea
                     placeholder={dict.partnerDetail.interactionPlaceholder}
                     title={dict.partnerDetail.interactionLog}
-                    className="w-full resize-none outline-none text-slate-700 bg-transparent placeholder:text-slate-400 min-h-[60px]"
+                    className="w-full resize-none outline-none text-slate-700 dark:text-slate-200 bg-transparent placeholder:text-slate-400 min-h-[60px]"
                     value={notes}
                     onChange={e => setNotes(e.target.value)}
                 />
-                <div className="flex items-center justify-between border-t border-slate-100 pt-3">
+                <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-3">
                     <div className="flex items-center gap-2">
                         {(['email', 'call', 'meeting'] as const).map(t => (
                             <button
                                 key={t}
                                 type="button"
                                 onClick={() => setType(t)}
-                                className={`px-3 py-1.5 rounded-md text-xs font-medium capitalize transition-colors ${type === t ? 'bg-indigo-100 text-indigo-700' : 'text-slate-500 hover:bg-slate-100'}`}
+                                className={`px-3 py-1.5 rounded-md text-xs font-medium capitalize transition-colors ${type === t ? 'bg-indigo-100 text-indigo-700' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                             >
                                 {t === 'email' ? dict.common.email : t === 'call' ? dict.common.call : t === 'meeting' ? dict.common.meeting : t}
                             </button>
                         ))}
-                        <div className="w-px h-4 bg-slate-200 mx-2" />
+                        <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-2" />
 
-                        <label className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-slate-500 hover:bg-slate-100 cursor-pointer transition-colors" title={dict.partnerDetail.attachFile}>
+                        <label className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors" title={dict.partnerDetail.attachFile}>
                             {isUploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Paperclip className="w-3.5 h-3.5" />}
                             <span className="hidden sm:inline">{dict.partnerDetail.attach}</span>
                             <input
@@ -106,13 +106,13 @@ export default function QuickActionForm({ partnerId, dict }: { partnerId: string
             {attachments.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-2 pt-3 border-t border-slate-50">
                     {attachments.map((att, i) => (
-                        <div key={i} className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white border border-slate-200 shadow-sm text-xs font-medium text-slate-600">
-                            <Paperclip className="w-3 h-3 text-slate-400" />
+                        <div key={i} className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm text-xs font-medium text-slate-600 dark:text-slate-300">
+                            <Paperclip className="w-3 h-3 text-slate-400 dark:text-slate-500" />
                             <span className="max-w-[150px] truncate">{att.name}</span>
                             <button
                                 type="button"
                                 onClick={() => removeAttachment(att.url)}
-                                className="ml-1 text-slate-400 hover:text-red-500 rounded-full hover:bg-slate-100 p-0.5"
+                                className="ml-1 text-slate-400 dark:text-slate-500 hover:text-red-500 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 p-0.5"
                                 title={dict.common.delete}
                             >
                                 <X className="w-3 h-3" />

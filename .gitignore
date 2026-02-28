@@ -2,6 +2,7 @@
 
 dist/
 local.db*
+local_prm.db*
 *.log
 *.js
 

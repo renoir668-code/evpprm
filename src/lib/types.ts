@@ -59,6 +59,18 @@ export interface Interaction {
     notes: string | null;
     type: 'call' | 'email' | 'meeting';
     attachments?: string | null; // JSON string array of { name: string, url: string }
+    created_by?: string | null;
+    created_by_name?: string | null;
+}
+
+export interface AuditLog {
+    id: string;
+    partner_id: string | null;
+    user_id: string | null;
+    user_name?: string;
+    action: string;
+    details: string | null;
+    created_at: string;
 }
 
 export interface Setting {
@@ -75,4 +87,4 @@ export interface CustomReminder {
     created_at?: string;
     completed_at?: string | null;
 }
-export type Dictionary = any; // Placeholder for i18n dictionary
+export type { Dictionary } from './i18n';

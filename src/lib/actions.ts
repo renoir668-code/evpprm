@@ -10,6 +10,50 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { put } from '@vercel/blob';
 
+// --- AUDIT LOGS ---
+export async function logAudit({ partner_id, user_id, action, details }: { partner_id?: string | null, user_id?: string | null, action: string, details?: string | null }) {
+    const id = randomUUID();
+    let finalUserId = user_id;
+    if (!finalUserId) {
+        const session = await getSession();
+        finalUserId = (session as any)?.id || null;
+    }
+    await query('INSERT INTO audit_logs (id, partner_id, user_id, action, details) VALUES ($1, $2, $3, $4, $5)', [id, partner_id || null, finalUserId || null, action, details || null]);
+}
+
+// --- GLOBAL SEARCH ---
+export async function searchAll(queryStr: string) {
+    if (!queryStr || queryStr.trim().length === 0) return [];
+
+    // Using ILIKE for postgres, LIKE for sqlite. For simplicity across both, using params is safer. 
+    // We already use parameterized queries everywhere.
+    // In Better-SQLite3 case-insensitive LIKE is by default. In Postgres ILIKE is needed, but assuming a simple LIKE or lower() works.
+    const lowerQ = `%${queryStr.toLowerCase()}%`;
+
+    const partners = await query('SELECT id, name FROM partners WHERE lower(name) LIKE $1 LIMIT 5', [lowerQ]);
+    const contacts = await query('SELECT id, partner_id, name, email FROM contacts WHERE lower(name) LIKE $1 OR lower(email) LIKE $2 LIMIT 5', [lowerQ, lowerQ]);
+    const interactions = await query(`
+        SELECT i.id, i.partner_id, i.type, i.notes, p.name as p_name 
+        FROM interactions i 
+        JOIN partners p ON p.id = i.partner_id 
+        WHERE lower(i.notes) LIKE $1 LIMIT 5
+    `, [lowerQ]);
+
+    const results = [];
+
+    for (const p of (partners.rows as any[])) {
+        results.push({ type: 'Partner', id: p.id, url: `/partners/${p.id}`, title: p.name, subtitle: 'Partner Directory' });
+    }
+    for (const c of (contacts.rows as any[])) {
+        results.push({ type: 'Contact', id: c.id, url: `/partners/${c.partner_id}`, title: c.name, subtitle: c.email ? `Email: ${c.email}` : 'Contact' });
+    }
+    for (const i of (interactions.rows as any[])) {
+        results.push({ type: 'Interaction', id: i.id, url: `/partners/${i.partner_id}`, title: `${i.type} interaction with ${i.p_name}`, subtitle: i.notes?.slice(0, 50) + '...' });
+    }
+
+    return results;
+}
+
 // --- PARTNERS ---
 
 export async function getPartners(): Promise<Partner[]> {
@@ -119,6 +163,10 @@ export async function updatePartner(id: string, data: Partial<Partner>) {
         WHERE id = $11
     `, [merged.name, merged.health_status, merged.integration_status, merged.integration_products, merged.key_person_id, merged.needs_attention_days, merged.owner_id || null, merged.vertical || null, merged.use_case || null, merged.logo_url || null, id]);
 
+    if (current.health_status !== merged.health_status) {
+        await logAudit({ partner_id: id, action: 'Updated Health Status', details: `Changed from ${current.health_status} to ${merged.health_status}` });
+    }
+
     revalidatePath('/');
     revalidatePath('/directory');
     revalidatePath(`/partners/${id}`);
@@ -181,10 +229,33 @@ export async function createContact(partnerId: string, data: Omit<Contact, 'id' 
     revalidatePath(`/partners/${partnerId}`);
 }
 
+export async function updateContact(id: string, data: Partial<Contact>) {
+    const check = await query('SELECT * FROM contacts WHERE id = $1', [id]);
+    const current = check.rows[0] as Contact;
+    if (!current) throw new Error('Contact not found');
+
+    const merged = { ...current, ...data };
+    await query('UPDATE contacts SET name = $1, email = $2, role = $3 WHERE id = $4', [merged.name, merged.email, merged.role, id]);
+    revalidatePath(`/partners/${current.partner_id}`);
+}
+
+export async function deleteContact(id: string) {
+    const check = await query('SELECT partner_id FROM contacts WHERE id = $1', [id]);
+    if (check.rows.length === 0) return;
+    await query('DELETE FROM contacts WHERE id = $1', [id]);
+    revalidatePath(`/partners/${check.rows[0].partner_id}`);
+}
+
 // --- INTERACTIONS ---
 
 export async function getInteractions(partnerId: string): Promise<Interaction[]> {
-    const res = await query('SELECT * FROM interactions WHERE partner_id = $1 ORDER BY date DESC', [partnerId]);
+    const res = await query(`
+        SELECT i.*, u.name as created_by_name 
+        FROM interactions i 
+        LEFT JOIN users u ON i.created_by = u.id 
+        WHERE i.partner_id = $1 
+        ORDER BY i.date DESC
+    `, [partnerId]);
     return res.rows.map((row: any) => ({ ...row, date: new Date(row.date).toISOString() })) as Interaction[];
 }
 
@@ -199,9 +270,19 @@ export async function getRecentInteractions(limit: number = 5): Promise<(Interac
     return res.rows.map((row: any) => ({ ...row, date: new Date(row.date).toISOString() })) as (Interaction & { partner_name: string, partner_logo: string | null })[];
 }
 
-export async function createInteraction(partnerId: string, data: Omit<Interaction, 'id' | 'partner_id'>) {
+export async function getAllInteractions(): Promise<Interaction[]> {
+    const res = await query('SELECT * FROM interactions ORDER BY date DESC');
+    return res.rows.map((row: any) => ({ ...row, date: new Date(row.date).toISOString() })) as Interaction[];
+}
+
+export async function createInteraction(partnerId: string, data: Omit<Interaction, 'id' | 'partner_id' | 'created_by' | 'created_by_name'>) {
+    const session = await getSession();
+    const createdBy = session?.id || null;
     const id = randomUUID();
-    await query('INSERT INTO interactions (id, partner_id, date, notes, type, attachments) VALUES ($1, $2, $3, $4, $5, $6)', [id, partnerId, data.date, data.notes, data.type, data.attachments || '[]']);
+    await query('INSERT INTO interactions (id, partner_id, date, notes, type, attachments, created_by) VALUES ($1, $2, $3, $4, $5, $6, $7)', [id, partnerId, data.date, data.notes, data.type, data.attachments || '[]', createdBy]);
+
+    await logAudit({ partner_id: partnerId, action: 'Logged Interaction', details: `Added a new ${data.type} log` });
+
     revalidatePath(`/partners/${partnerId}`);
     revalidatePath('/');
 }
@@ -214,6 +295,13 @@ export async function updateInteraction(id: string, data: Partial<Interaction>) 
     const merged = { ...current, ...data };
     await query('UPDATE interactions SET date = $1, notes = $2, attachments = $3 WHERE id = $4', [merged.date, merged.notes, merged.attachments || '[]', id]);
     revalidatePath(`/partners/${current.partner_id}`);
+}
+
+export async function deleteInteraction(id: string) {
+    const check = await query('SELECT partner_id FROM interactions WHERE id = $1', [id]);
+    if (check.rows.length === 0) return;
+    await query('DELETE FROM interactions WHERE id = $1', [id]);
+    revalidatePath(`/partners/${check.rows[0].partner_id}`);
 }
 
 export async function uploadAttachment(formData: FormData): Promise<string> {
@@ -283,6 +371,28 @@ export async function getTags(): Promise<Tag[]> {
     return res.rows as Tag[];
 }
 
+export async function createTag(name: string, color: string) {
+    const id = randomUUID();
+    await query('INSERT INTO tags (id, name, color) VALUES ($1, $2, $3)', [id, name, color]);
+    revalidatePath('/settings');
+    revalidatePath('/directory');
+    revalidatePath('/merchants');
+}
+
+export async function updateTag(id: string, name: string, color: string) {
+    await query('UPDATE tags SET name = $1, color = $2 WHERE id = $3', [name, color, id]);
+    revalidatePath('/settings');
+    revalidatePath('/directory');
+    revalidatePath('/merchants');
+}
+
+export async function deleteTag(id: string) {
+    await query('DELETE FROM tags WHERE id = $1', [id]);
+    revalidatePath('/settings');
+    revalidatePath('/directory');
+    revalidatePath('/merchants');
+}
+
 export async function getPartnerTags(partnerId: string): Promise<Tag[]> {
     const res = await query(`
         SELECT t.* FROM tags t
@@ -290,6 +400,19 @@ export async function getPartnerTags(partnerId: string): Promise<Tag[]> {
         WHERE pt.partner_id = $1
     `, [partnerId]);
     return res.rows as Tag[];
+}
+
+export async function getAllPartnerTagsBulk(): Promise<Record<string, Tag[]>> {
+    const res = await query(`
+        SELECT pt.partner_id, t.id, t.name, t.color FROM tags t
+        JOIN partner_tags pt ON t.id = pt.tag_id
+    `);
+    const map: Record<string, Tag[]> = {};
+    for (const row of res.rows as any[]) {
+        if (!map[row.partner_id]) map[row.partner_id] = [];
+        map[row.partner_id].push({ id: row.id, name: row.name, color: row.color });
+    }
+    return map;
 }
 
 export async function setPartnerTags(partnerId: string, tagIds: string[]) {
@@ -347,6 +470,9 @@ export async function getUser(id: string): Promise<User | undefined> {
 }
 
 export async function createUser(data: Omit<User, 'id' | 'created_at' | 'password_hash'> & { password?: string }) {
+    const session = await getSession();
+    if (session?.role !== 'Admin') throw new Error('Unauthorized: Admin role required');
+
     const id = randomUUID();
     let hash = '';
     if (data.password) {
@@ -369,7 +495,19 @@ export async function updateUser(id: string, data: Partial<User>) {
     revalidatePath('/settings');
 }
 
+export async function resetUserPassword(id: string, newPassword: string) {
+    const session = await getSession();
+    if (session?.role !== 'Admin') throw new Error('Unauthorized: Admin role required');
+
+    const hash = await bcrypt.hash(newPassword, 10);
+    await query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, id]);
+    revalidatePath('/settings');
+}
+
 export async function deleteUser(id: string) {
+    const session = await getSession();
+    if (session?.role !== 'Admin') throw new Error('Unauthorized: Admin role required');
+
     await query('DELETE FROM users WHERE id = $1', [id]);
     revalidatePath('/settings');
 }

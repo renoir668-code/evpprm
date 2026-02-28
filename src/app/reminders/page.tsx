@@ -126,22 +126,22 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">{dict.reminders.title}</h1>
-                    <p className="text-slate-500 mt-2">{dict.reminders.subtitle}</p>
+                    <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">{dict.reminders.title}</h1>
+                    <p className="text-slate-500 dark:text-slate-400 mt-2">{dict.reminders.subtitle}</p>
                 </div>
-                <ReminderFilter availableTeam={availableTeam} initialOwner={owner} />
+                <ReminderFilter availableTeam={availableTeam} initialOwner={owner} dict={dict} />
             </div>
 
             {/* Personal Reminders */}
             <div className="space-y-4">
-                <div className="flex items-center gap-2 text-slate-400 px-2 font-bold uppercase tracking-widest text-[10px]">
+                <div className="flex items-center gap-2 text-slate-400 dark:text-slate-500 px-2 font-bold uppercase tracking-widest text-[10px]">
                     <Calendar className="w-3 h-3" />
                     {dict.reminders.personalReminders}
                 </div>
-                <div className="bg-white rounded-[32px] border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden">
+                <div className="bg-white dark:bg-slate-800 rounded-[32px] border border-slate-200 dark:border-slate-700 shadow-xl shadow-slate-200/50 overflow-hidden">
                     {personalReminders.length === 0 ? (
-                        <div className="px-6 py-12 text-center text-slate-500">
-                            <p className="font-bold text-slate-400">{dict.reminders.noPersonalReminders}</p>
+                        <div className="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
+                            <p className="font-bold text-slate-400 dark:text-slate-500">{dict.reminders.noPersonalReminders}</p>
                         </div>
                     ) : (
                         <div className="divide-y divide-slate-100">
@@ -159,10 +159,10 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
                     <Users className="w-3 h-3" />
                     {dict.reminders.teamReminders}
                 </div>
-                <div className="bg-white rounded-[32px] border border-indigo-100 shadow-xl shadow-indigo-100/50 overflow-hidden">
+                <div className="bg-white dark:bg-slate-800 rounded-[32px] border border-indigo-100 shadow-xl shadow-indigo-100/50 overflow-hidden">
                     {teamReminders.length === 0 ? (
-                        <div className="px-6 py-12 text-center text-slate-500">
-                            <p className="font-bold text-slate-400">{dict.reminders.noTeamReminders}</p>
+                        <div className="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
+                            <p className="font-bold text-slate-400 dark:text-slate-500">{dict.reminders.noTeamReminders}</p>
                         </div>
                     ) : (
                         <div className="divide-y divide-slate-100">

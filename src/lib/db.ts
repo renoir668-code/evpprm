@@ -154,6 +154,21 @@ export async function initDb(): Promise<void> {
       )
     `);
 
+    sqliteDb.exec(`
+      CREATE TABLE IF NOT EXISTS audit_logs (
+        id TEXT PRIMARY KEY,
+        partner_id TEXT REFERENCES partners(id) ON DELETE CASCADE,
+        user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+        action TEXT NOT NULL,
+        details TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    try {
+      sqliteDb.exec('ALTER TABLE interactions ADD COLUMN created_by TEXT REFERENCES users(id) ON DELETE SET NULL');
+    } catch (e) { }
+
     const marioHash = "$2b$10$pFVD.Gf8ZLUX/FjOeHDd6eXT6PInTQOSvwFEymA.kDxBgYzKfuPyi";
     sqliteDb.prepare(`
       INSERT INTO users (id, name, email, role, password_hash)
@@ -281,6 +296,21 @@ export async function initDb(): Promise<void> {
         completed_at TIMESTAMP
       )
     `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS audit_logs (
+        id TEXT PRIMARY KEY,
+        partner_id TEXT REFERENCES partners(id) ON DELETE CASCADE,
+        user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+        action TEXT NOT NULL,
+        details TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    try {
+      await client.query('ALTER TABLE interactions ADD COLUMN IF NOT EXISTS created_by TEXT REFERENCES users(id) ON DELETE SET NULL');
+    } catch (e) { }
 
     const marioHash = "$2b$10$pFVD.Gf8ZLUX/FjOeHDd6eXT6PInTQOSvwFEymA.kDxBgYzKfuPyi";
     await client.query(`

@@ -5,6 +5,12 @@ import path from 'path';
 export async function GET(request: Request, context: { params: Promise<{ filename: string }> }) {
     const params = await context.params;
     const { filename } = params;
+
+    // SEC: Prevent path traversal attacks
+    if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+        return new NextResponse('Invalid filename', { status: 400 });
+    }
+
     const filePath = path.join(process.cwd(), 'uploads', filename);
 
     if (!existsSync(filePath)) {
