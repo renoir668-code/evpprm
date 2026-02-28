@@ -1,4 +1,4 @@
-import { getPartner, getContacts, getInteractions, getPartnerTags, getSettings, getAllCustomReminders } from '@/lib/actions';
+import { getPartner, getContacts, getInteractions, getPartnerTags, getSettings, getAllCustomReminders, getUsers } from '@/lib/actions';
 export const dynamic = 'force-dynamic';
 import { notFound } from 'next/navigation';
 import { Activity, Building2, ArrowLeft } from 'lucide-react';
@@ -28,7 +28,8 @@ export default async function PartnerProfile({ params }: { params: Promise<{ id:
     const settings = await getSettings();
 
     const availableProducts = parseSetting(settings, 'products', 'API, Dashboard, Integrations');
-    const availableTeam = parseSetting(settings, 'team', 'Admin, Sales, Support');
+    const allUsers = await getUsers();
+    const availableTeam = allUsers.map(u => u.name).sort();
     const availableVerticals = parseSetting(settings, 'verticals', 'Music, Gaming, Finance');
     const availableUseCases = parseSetting(settings, 'use_cases', 'B2B, B2C, Marketplace');
 

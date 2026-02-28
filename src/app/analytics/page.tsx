@@ -1,4 +1,4 @@
-import { getPartners, getAllInteractions, getSettings } from '@/lib/actions';
+import { getPartners, getAllInteractions, getSettings, getUsers } from '@/lib/actions';
 export const dynamic = 'force-dynamic';
 import { AnalyticsCharts } from './AnalyticsCharts';
 import { PieChart as PieChartIcon, TrendingUp, Users as UsersIcon, Activity } from 'lucide-react';
@@ -9,7 +9,8 @@ export default async function AnalyticsPage() {
     const partners = await getPartners();
     const settings = await getSettings();
     const dict = await getDict();
-    const availableTeam = parseSetting(settings, 'team', 'Admin, Sales, Support');
+    const allUsers = await getUsers();
+    const availableTeam = allUsers.map(u => u.name).sort();
     const availableProducts = parseSetting(settings, 'products', 'API, Dashboard, Integrations');
     const availableVerticals = parseSetting(settings, 'verticals', 'Music, Gaming, Finance');
 

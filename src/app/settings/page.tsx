@@ -22,7 +22,7 @@ export default async function SettingsPage() {
     const users = await getUsers();
     const partners = await getPartners();
     const workgroups = await getWorkgroups();
-    const keyPeople = parseSetting(settings, 'team', 'Admin, Sales, Support');
+    const keyPeople = users.map(u => u.name).sort();
     const tags = await getTags();
 
     return (
@@ -40,7 +40,6 @@ export default async function SettingsPage() {
 
                 <SettingsForm
                     initialProducts={productsSetting}
-                    initialTeam={teamSetting}
                     initialVerticals={verticalsSetting}
                     initialUseCases={useCasesSetting}
                     dict={dict}

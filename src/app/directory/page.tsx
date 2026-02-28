@@ -1,4 +1,4 @@
-import { getPartners, getTags, getAllPartnerTagsBulk, getSettings } from '@/lib/actions';
+import { getPartners, getTags, getAllPartnerTagsBulk, getSettings, getUsers } from '@/lib/actions';
 export const dynamic = 'force-dynamic';
 import { Partner, Tag } from '@/lib/types';
 import PartnerList from '@/components/PartnerList';
@@ -19,7 +19,8 @@ export default async function DirectoryPage() {
     const tagMap = await getAllPartnerTagsBulk();
 
     const availableProducts = parseSetting(settings, 'products', 'API, Dashboard, Integrations');
-    const availableTeam = parseSetting(settings, 'team', 'Admin, Sales, Support');
+    const allUsers = await getUsers();
+    const availableTeam = allUsers.map(u => u.name).sort();
     const availableVerticals = parseSetting(settings, 'verticals', 'Music, Gaming, Finance');
 
     const partnersWithTags: PartnerWithTags[] = partners.map(p => ({

@@ -6,19 +6,16 @@ import { Save, Check } from 'lucide-react';
 
 export default function SettingsForm({
     initialProducts,
-    initialTeam,
     initialVerticals,
     initialUseCases,
     dict
 }: {
     initialProducts: string;
-    initialTeam: string;
     initialVerticals: string;
     initialUseCases: string;
     dict: any;
 }) {
     const [products, setProducts] = useState(initialProducts);
-    const [team, setTeam] = useState(initialTeam);
     const [verticals, setVerticals] = useState(initialVerticals);
     const [useCases, setUseCases] = useState(initialUseCases);
     const [isSaving, setIsSaving] = useState(false);
@@ -30,7 +27,6 @@ export default function SettingsForm({
         setSaved(false);
 
         await setSetting('products', products);
-        await setSetting('team', team);
         await setSetting('verticals', verticals);
         await setSetting('use_cases', useCases);
 
@@ -56,20 +52,7 @@ export default function SettingsForm({
                 />
             </div>
 
-            <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">
-                    {dict.settings.teamMembers}
-                </label>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">{dict.settings.teamHelp}</p>
-                <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/40 focus:border-indigo-500 transition-shadow text-slate-900 dark:text-white"
-                    placeholder={dict.settings.teamMembers}
-                    title={dict.settings.teamMembers}
-                    value={team}
-                    onChange={e => setTeam(e.target.value)}
-                />
-            </div>
+
 
             <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">

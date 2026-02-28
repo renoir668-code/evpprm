@@ -1,4 +1,4 @@
-import { getPartners, getSettings } from '@/lib/actions';
+import { getPartners, getSettings, getUsers } from '@/lib/actions';
 export const dynamic = 'force-dynamic';
 import { PipelineBoard } from './PipelineBoard';
 import { getDict } from '@/lib/i18n';
@@ -10,7 +10,8 @@ export default async function PipelinePage() {
     const dict = await getDict();
 
     const availableProducts = parseSetting(settings, 'products', 'API, Dashboard, Integrations');
-    const availableTeam = parseSetting(settings, 'team', 'Admin, Sales, Support');
+    const allUsers = await getUsers();
+    const availableTeam = allUsers.map(u => u.name).sort();
     const availableVerticals = parseSetting(settings, 'verticals', 'Music, Gaming, Finance');
 
     return (

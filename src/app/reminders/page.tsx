@@ -15,43 +15,49 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
     const userDetails = await getCurrentUserDetails();
     const dict = await getDict();
 
-    // User's relevant identifiers
-    const userKP = (userDetails?.linked_key_person || userDetails?.name || '').toLowerCase();
+    // Identity mappings: using user names as identity for the Key Person field
+    const userKP = (userDetails?.name || '').toLowerCase();
     const isAdmin = userDetails?.role === 'Admin';
     const allUsers = await getUsers();
 
-    // Map KP strings to User objects for hierarchy lookup
-    const kpToUsers: Record<string, User[]> = {};
+    // Map names to User IDs for ownership hierarchy
+    const nameToUserIds: Record<string, string[]> = {};
     allUsers.forEach(u => {
-        const kp = (u.linked_key_person || u.name || '').toLowerCase();
-        if (kp) {
-            if (!kpToUsers[kp]) kpToUsers[kp] = [];
-            kpToUsers[kp].push(u);
+        const nameLower = (u.name || '').toLowerCase();
+        if (nameLower) {
+            if (!nameToUserIds[nameLower]) nameToUserIds[nameLower] = [];
+            nameToUserIds[nameLower].push(u.id);
+        }
+        // Also support the legacy linked_key_person for backward compatibility
+        const legacyKP = (u.linked_key_person || '').toLowerCase();
+        if (legacyKP && legacyKP !== nameLower) {
+            if (!nameToUserIds[legacyKP]) nameToUserIds[legacyKP] = [];
+            nameToUserIds[legacyKP].push(u.id);
         }
     });
 
-    // Get workgroup visibility context (Team members' IDs and their linked KPs)
-    const teamKPs = new Set<string>();
+    // Get workgroup context (Users and their names)
+    const teamNames = new Set<string>();
     const teamUserIds = new Set<string>();
 
     if (userDetails) {
         teamUserIds.add(userDetails.id);
-        if (userKP) teamKPs.add(userKP);
+        if (userKP) teamNames.add(userKP);
 
         for (const wg of userDetails.workgroups) {
             for (const memberId of wg.member_ids) {
                 teamUserIds.add(memberId);
                 const u = allUsers.find(x => x.id === memberId);
                 if (u) {
-                    const kp = (u.linked_key_person || u.name || '').toLowerCase();
-                    if (kp) teamKPs.add(kp);
+                    const nameLower = (u.name || '').toLowerCase();
+                    if (nameLower) teamNames.add(nameLower);
+                    const legacyKP = (u.linked_key_person || '').toLowerCase();
+                    if (legacyKP) teamNames.add(legacyKP);
                 }
             }
         }
     }
 
-    const teamSetting = settings.find((s) => s.key === 'team')?.value || 'Admin, Sales, Support';
-    const availableTeamStrings = teamSetting.split(',').map((s) => s.trim()).filter(Boolean);
 
     const now = new Date();
 
@@ -116,16 +122,16 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
         const partnerKP = g.partner.key_person_id?.toLowerCase();
         const partnerOwnerId = g.partner.owner_id;
 
-        const isAssignedToMeOrTeam = partnerKP && teamKPs.has(partnerKP);
+        const isAssignedToMeOrTeam = partnerKP && teamNames.has(partnerKP);
         const isOwnedByMeOrTeam = partnerOwnerId && teamUserIds.has(partnerOwnerId);
 
         return isAssignedToMeOrTeam || isOwnedByMeOrTeam;
     });
 
-    // Apply the dropdown filter (Hierarchy: Match KP string OR Ownership by user linked to that KP)
+    // Apply the dropdown filter (Hierarchy: Match Name string OR Ownership by user with that name)
     if (owner) {
         const ownerLower = owner.toLowerCase();
-        const linkedUserIds = (kpToUsers[ownerLower] || []).map(u => u.id);
+        const linkedUserIds = nameToUserIds[ownerLower] || [];
 
         filteredReminders = filteredReminders.filter(g => {
             const partnerKP = g.partner.key_person_id?.toLowerCase();
@@ -170,10 +176,10 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
     personalReminders.sort(sortFn);
     teamReminders.sort(sortFn);
 
-    // Prepare dropdown options for the filter
+    // Prepare dropdown options for the filter (Just registered users)
     const filterOptions = isAdmin
-        ? Array.from(new Set([...availableTeamStrings, ...allUsers.map(u => u.linked_key_person || u.name)])).filter(Boolean).sort()
-        : Array.from(new Set([...allUsers.filter(u => teamUserIds.has(u.id)).map(u => u.linked_key_person || u.name)])).filter(Boolean).sort();
+        ? Array.from(new Set(allUsers.map(u => u.name))).filter(Boolean).sort()
+        : Array.from(new Set(allUsers.filter(u => teamUserIds.has(u.id)).map(u => u.name))).filter(Boolean).sort();
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
