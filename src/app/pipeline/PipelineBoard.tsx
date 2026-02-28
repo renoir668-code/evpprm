@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Partner, ProductIntegration, Dictionary } from '@/lib/types';
 import { updatePartnerProducts } from '@/lib/actions';
 import { cn } from '@/lib/utils';
-import { MoreHorizontal, Search, X } from 'lucide-react';
+import { MoreHorizontal, Search, X, ChevronDown, Building2, Store } from 'lucide-react';
 import { parseProducts } from '@/lib/helpers';
 
 const COLUMNS = [
@@ -17,10 +17,35 @@ const COLUMNS = [
     { id: 'Not interested', color: 'bg-red-100 dark:bg-red-900/30', dictKey: 'notInterested' },
 ];
 
-export function PipelineBoard({ initialPartners, dict }: { initialPartners: Partner[], dict: Dictionary }) {
+export function PipelineBoard({
+    initialPartners,
+    dict,
+    availableProducts,
+    availableTeam,
+    availableVerticals
+}: {
+    initialPartners: Partner[],
+    dict: Dictionary,
+    availableProducts: string[],
+    availableTeam: string[],
+    availableVerticals: string[]
+}) {
     const [partners, setPartners] = useState(initialPartners);
     const [draggedId, setDraggedId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedPartner, setSelectedPartner] = useState<string>('');
+    const [selectedVertical, setSelectedVertical] = useState<string>('');
+    const [selectedProduct, setSelectedProduct] = useState<string>('');
+    const [selectedTeam, setSelectedTeam] = useState<string>('');
+
+    // Sort partners: generic partners first, then merchants
+    const sortedPartnersForDropdown = useMemo(() => {
+        return [...initialPartners].sort((a, b) => {
+            if (a.use_case !== 'Merchant' && b.use_case === 'Merchant') return -1;
+            if (a.use_case === 'Merchant' && b.use_case !== 'Merchant') return 1;
+            return a.name.localeCompare(b.name);
+        });
+    }, [initialPartners]);
 
     const pipelineItems = partners.flatMap(p => {
         const prods = parseProducts(p.integration_products);
@@ -31,6 +56,8 @@ export function PipelineBoard({ initialPartners, dict }: { initialPartners: Part
             health_status: p.health_status,
             product: prod.product,
             status: prod.status,
+            vertical: p.vertical,
+            key_person_id: p.key_person_id,
             partner: p
         }));
     });
@@ -80,19 +107,26 @@ export function PipelineBoard({ initialPartners, dict }: { initialPartners: Part
             }
         } catch (err) {
             console.error(err);
-            // Revert on error
             setPartners(initialPartners);
         }
     };
 
-    const filteredItems = pipelineItems.filter(p => !searchQuery || p.partnerName.toLowerCase().includes(searchQuery.toLowerCase()));
+    const filteredItems = pipelineItems.filter(p => {
+        const matchesSearch = !searchQuery || p.partnerName.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesPartner = !selectedPartner || p.partnerId === selectedPartner;
+        const matchesVertical = !selectedVertical || p.vertical === selectedVertical;
+        const matchesProduct = !selectedProduct || p.product === selectedProduct;
+        const matchesTeam = !selectedTeam || p.key_person_id === selectedTeam;
+        return matchesSearch && matchesPartner && matchesVertical && matchesProduct && matchesTeam;
+    });
 
     return (
-        <div className="flex flex-col h-full">
-            <div className="mb-6 max-w-md w-full relative group">
-                <div className="flex bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm focus-within:ring-4 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 transition-all">
+        <div className="flex flex-col h-full space-y-6">
+            {/* Header / Filters Section */}
+            <div className="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center bg-white/40 dark:bg-slate-900/40 p-1 rounded-2xl">
+                <div className="flex bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm focus-within:ring-4 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 transition-all flex-1 w-full lg:max-w-md">
                     <div className="pl-4 flex items-center justify-center">
-                        <Search className="w-5 h-5 text-slate-400 dark:text-slate-500" />
+                        <Search className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                     </div>
                     <input
                         type="text"
@@ -113,28 +147,55 @@ export function PipelineBoard({ initialPartners, dict }: { initialPartners: Part
                     )}
                 </div>
 
-                {searchQuery && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden z-20 animate-in fade-in slide-in-from-top-2 duration-200">
-                        {(() => {
-                            const suggestions = Array.from(new Set(pipelineItems.map(p => p.partnerName)))
-                                .filter(name => name.toLowerCase().includes(searchQuery.toLowerCase()) && name.toLowerCase() !== searchQuery.toLowerCase())
-                                .slice(0, 5);
+                <div className="flex gap-2 flex-wrap w-full lg:w-auto">
+                    {/* Partner Dropdown */}
+                    <select
+                        className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 shadow-sm outline-none text-slate-700 dark:text-slate-200 font-bold text-xs focus:ring-4 focus:ring-indigo-500/20 cursor-pointer flex-1 sm:flex-initial"
+                        value={selectedPartner}
+                        onChange={(e) => setSelectedPartner(e.target.value)}
+                        title="Filter by Partner"
+                    >
+                        <option value="">{dict.directory.allPartners || 'All Partners/Merchants'}</option>
+                        {sortedPartnersForDropdown.map(p => (
+                            <option key={p.id} value={p.id}>
+                                {p.use_case === 'Merchant' ? '🏪 ' : '🏢 '} {p.name}
+                            </option>
+                        ))}
+                    </select>
 
-                            if (suggestions.length === 0) return null;
+                    {/* Vertical Filter */}
+                    <select
+                        className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 shadow-sm outline-none text-slate-700 dark:text-slate-200 font-bold text-xs focus:ring-4 focus:ring-indigo-500/20 cursor-pointer flex-1 sm:flex-initial"
+                        value={selectedVertical}
+                        onChange={(e) => setSelectedVertical(e.target.value)}
+                        title={dict.directory.allVerticals}
+                    >
+                        <option value="">{dict.directory.allVerticals}</option>
+                        {availableVerticals.map(v => <option key={v} value={v}>{v}</option>)}
+                    </select>
 
-                            return suggestions.map(name => (
-                                <button
-                                    key={name}
-                                    className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 transition-colors font-medium border-b border-slate-100 dark:border-slate-800 last:border-0"
-                                    onClick={() => setSearchQuery(name)}
-                                >
-                                    <span className="text-indigo-600 dark:text-indigo-400 font-bold mr-2">→</span>
-                                    {name}
-                                </button>
-                            ));
-                        })()}
-                    </div>
-                )}
+                    {/* Product Filter */}
+                    <select
+                        className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 shadow-sm outline-none text-slate-700 dark:text-slate-200 font-bold text-xs focus:ring-4 focus:ring-indigo-500/20 cursor-pointer flex-1 sm:flex-initial"
+                        value={selectedProduct}
+                        onChange={(e) => setSelectedProduct(e.target.value)}
+                        title={dict.directory.allProducts}
+                    >
+                        <option value="">{dict.directory.allProducts}</option>
+                        {availableProducts.map(p => <option key={p} value={p}>{p}</option>)}
+                    </select>
+
+                    {/* Team Filter */}
+                    <select
+                        className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 shadow-sm outline-none text-slate-700 dark:text-slate-200 font-bold text-xs focus:ring-4 focus:ring-indigo-500/20 cursor-pointer flex-1 sm:flex-initial"
+                        value={selectedTeam}
+                        onChange={(e) => setSelectedTeam(e.target.value)}
+                        title={dict.directory.allTeamMembers}
+                    >
+                        <option value="">{dict.directory.allTeamMembers}</option>
+                        {availableTeam.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                </div>
             </div>
 
             <div className="flex gap-6 overflow-x-auto pb-8 flex-1 h-[calc(100vh-270px)]">

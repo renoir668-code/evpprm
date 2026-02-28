@@ -49,6 +49,7 @@ export interface Contact {
     partner_id: string;
     name: string;
     email: string | null;
+    phone: string | null;
     role: string | null;
 }
 

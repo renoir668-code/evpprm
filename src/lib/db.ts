@@ -120,9 +120,14 @@ export async function initDb(): Promise<void> {
         partner_id TEXT NOT NULL REFERENCES partners(id) ON DELETE CASCADE,
         name TEXT NOT NULL,
         email TEXT,
+        phone TEXT,
         role TEXT
       )
     `);
+
+    try {
+      sqliteDb.exec('ALTER TABLE contacts ADD COLUMN phone TEXT');
+    } catch (e) { }
 
     sqliteDb.exec(`
       CREATE TABLE IF NOT EXISTS interactions (
@@ -263,9 +268,14 @@ export async function initDb(): Promise<void> {
         partner_id TEXT NOT NULL REFERENCES partners(id) ON DELETE CASCADE,
         name TEXT NOT NULL,
         email TEXT,
+        phone TEXT,
         role TEXT
       )
     `);
+
+    try {
+      await client.query('ALTER TABLE contacts ADD COLUMN IF NOT EXISTS phone TEXT');
+    } catch (e) { }
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS interactions (

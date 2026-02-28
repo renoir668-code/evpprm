@@ -225,7 +225,7 @@ export async function getContacts(partnerId: string): Promise<Contact[]> {
 
 export async function createContact(partnerId: string, data: Omit<Contact, 'id' | 'partner_id'>) {
     const id = randomUUID();
-    await query('INSERT INTO contacts (id, partner_id, name, email, role) VALUES ($1, $2, $3, $4, $5)', [id, partnerId, data.name, data.email, data.role]);
+    await query('INSERT INTO contacts (id, partner_id, name, email, phone, role) VALUES ($1, $2, $3, $4, $5, $6)', [id, partnerId, data.name, data.email, (data as any).phone || null, data.role]);
     revalidatePath(`/partners/${partnerId}`);
 }
 
@@ -235,7 +235,7 @@ export async function updateContact(id: string, data: Partial<Contact>) {
     if (!current) throw new Error('Contact not found');
 
     const merged = { ...current, ...data };
-    await query('UPDATE contacts SET name = $1, email = $2, role = $3 WHERE id = $4', [merged.name, merged.email, merged.role, id]);
+    await query('UPDATE contacts SET name = $1, email = $2, phone = $3, role = $4 WHERE id = $5', [merged.name, merged.email, merged.phone || null, merged.role, id]);
     revalidatePath(`/partners/${current.partner_id}`);
 }
 

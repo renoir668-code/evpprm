@@ -126,7 +126,7 @@ export default function PartnerList({
     return (
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row gap-4 justify-between">
-                <div className="flex bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white dark:border-slate-800 rounded-xl overflow-hidden shadow-sm focus-within:ring-4 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 transition-all flex-1 max-w-xl">
+                <div className="flex bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm focus-within:ring-4 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 transition-all flex-1 max-w-xl">
                     <div className="pl-4 flex items-center justify-center">
                         <Search className="w-5 h-5 text-slate-400 dark:text-slate-500" />
                     </div>
@@ -151,7 +151,7 @@ export default function PartnerList({
 
                 <div className="flex gap-3 flex-wrap">
                     <select
-                        className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white dark:border-slate-800 rounded-xl px-4 py-3 shadow-sm outline-none text-slate-700 dark:text-slate-200 font-medium focus:ring-4 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/40 focus:border-indigo-500 cursor-pointer"
+                        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 shadow-sm outline-none text-slate-700 dark:text-slate-200 font-medium focus:ring-4 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/40 focus:border-indigo-500 cursor-pointer"
                         value={selectedStatus}
                         onChange={(e) => setSelectedStatus(e.target.value)}
                         title={dict.directory.allStatuses}

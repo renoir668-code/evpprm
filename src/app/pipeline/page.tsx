@@ -1,11 +1,17 @@
-import { getPartners } from '@/lib/actions';
+import { getPartners, getSettings } from '@/lib/actions';
 export const dynamic = 'force-dynamic';
 import { PipelineBoard } from './PipelineBoard';
 import { getDict } from '@/lib/i18n';
+import { parseSetting } from '@/lib/helpers';
 
 export default async function PipelinePage() {
     const partners = await getPartners();
+    const settings = await getSettings();
     const dict = await getDict();
+
+    const availableProducts = parseSetting(settings, 'products', 'API, Dashboard, Integrations');
+    const availableTeam = parseSetting(settings, 'team', 'Admin, Sales, Support');
+    const availableVerticals = parseSetting(settings, 'verticals', 'Music, Gaming, Finance');
 
     return (
         <div className="space-y-6 h-full flex flex-col pt-4">
@@ -14,7 +20,13 @@ export default async function PipelinePage() {
                 <p className="text-slate-500 dark:text-slate-400 mt-2">{dict.pipeline.subtitle}</p>
             </div>
 
-            <PipelineBoard initialPartners={partners} dict={dict} />
+            <PipelineBoard
+                initialPartners={partners}
+                dict={dict}
+                availableProducts={availableProducts}
+                availableTeam={availableTeam}
+                availableVerticals={availableVerticals}
+            />
         </div>
     );
 }

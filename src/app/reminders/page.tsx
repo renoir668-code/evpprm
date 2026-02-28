@@ -18,12 +18,14 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
     const userKP = userDetails?.linked_key_person;
     const isAdmin = userDetails?.role === 'Admin';
 
-    // Get workgroup partners
+    // Get workgroup partners and member IDs
     const allUsers = await getUsers();
     const teamKPs = new Set<string>();
+    const teamMemberIds = new Set<string>();
     if (userDetails) {
         for (const wg of userDetails.workgroups) {
             for (const memberId of wg.member_ids) {
+                teamMemberIds.add(memberId);
                 const u = allUsers.find(x => x.id === memberId);
                 if (u) {
                     const kp = u.linked_key_person || u.name;
@@ -91,11 +93,14 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
 
     // Initial filtering based on permissions
     let filteredReminders = allReminders.filter(g => {
-        if (!isAdmin && !userKP && teamKPs.size === 0) return false;
         if (isAdmin) return true;
+        if (!userDetails) return false;
+
         const isPersonal = userKP && g.partner.key_person_id === userKP;
-        const isTeam = g.partner.key_person_id && teamKPs.has(g.partner.key_person_id);
-        return isPersonal || isTeam;
+        const assignedToTeamMember = g.partner.key_person_id && teamKPs.has(g.partner.key_person_id);
+        const ownedByTeamMember = g.partner.owner_id && teamMemberIds.has(g.partner.owner_id);
+
+        return isPersonal || assignedToTeamMember || ownedByTeamMember;
     });
 
     // Apply the dropdown filter
@@ -105,11 +110,19 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
 
     // Split into categories
     const personalReminders = filteredReminders.filter(g => {
-        return userKP && g.partner.key_person_id === userKP;
+        const isKP = userKP && g.partner.key_person_id === userKP;
+        const isOwnerAndUnassigned = g.partner.owner_id === userDetails?.id && !g.partner.key_person_id;
+        return isKP || isOwnerAndUnassigned;
     });
 
     const teamReminders = filteredReminders.filter(g => {
-        return g.partner.key_person_id !== userKP;
+        const isKP = userKP && g.partner.key_person_id === userKP;
+        const isOwnerAndUnassigned = g.partner.owner_id === userDetails?.id && !g.partner.key_person_id;
+        // If it's in personal, don't show in team
+        if (isKP || isOwnerAndUnassigned) return false;
+
+        // Everything else that passed the visibility filter goes to team
+        return true;
     });
 
     const sortFn = (a: any, b: any) => {
@@ -159,7 +172,7 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
                     <Users className="w-3 h-3" />
                     {dict.reminders.teamReminders}
                 </div>
-                <div className="bg-white dark:bg-slate-800 rounded-[32px] border border-indigo-100 shadow-xl shadow-indigo-100/50 overflow-hidden">
+                <div className="bg-white dark:bg-slate-800 rounded-[32px] border border-indigo-100 dark:border-slate-700/50 shadow-xl shadow-indigo-100/50 overflow-hidden">
                     {teamReminders.length === 0 ? (
                         <div className="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
                             <p className="font-bold text-slate-400 dark:text-slate-500">{dict.reminders.noTeamReminders}</p>
