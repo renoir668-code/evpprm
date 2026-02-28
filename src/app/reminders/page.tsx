@@ -1,4 +1,5 @@
 import { getPartners, getCustomReminders, getSettings, getCurrentUserDetails, getUsers } from '@/lib/actions';
+import { User } from '@/lib/types';
 export const dynamic = 'force-dynamic';
 import { Calendar, Users } from 'lucide-react';
 import { ReminderFilter } from './ReminderFilter';
@@ -15,32 +16,42 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
     const dict = await getDict();
 
     // User's relevant identifiers
-    const userKP = userDetails?.linked_key_person;
+    const userKP = (userDetails?.linked_key_person || userDetails?.name || '').toLowerCase();
     const isAdmin = userDetails?.role === 'Admin';
-
-    // Get workgroup partners and member IDs
     const allUsers = await getUsers();
+
+    // Map KP strings to User objects for hierarchy lookup
+    const kpToUsers: Record<string, User[]> = {};
+    allUsers.forEach(u => {
+        const kp = (u.linked_key_person || u.name || '').toLowerCase();
+        if (kp) {
+            if (!kpToUsers[kp]) kpToUsers[kp] = [];
+            kpToUsers[kp].push(u);
+        }
+    });
+
+    // Get workgroup visibility context (Team members' IDs and their linked KPs)
     const teamKPs = new Set<string>();
-    const teamMemberIds = new Set<string>();
+    const teamUserIds = new Set<string>();
+
     if (userDetails) {
+        teamUserIds.add(userDetails.id);
+        if (userKP) teamKPs.add(userKP);
+
         for (const wg of userDetails.workgroups) {
             for (const memberId of wg.member_ids) {
-                teamMemberIds.add(memberId);
+                teamUserIds.add(memberId);
                 const u = allUsers.find(x => x.id === memberId);
                 if (u) {
-                    const kp = u.linked_key_person || u.name;
+                    const kp = (u.linked_key_person || u.name || '').toLowerCase();
                     if (kp) teamKPs.add(kp);
                 }
             }
         }
     }
 
-    if (userKP) {
-        teamKPs.add(userKP);
-    }
-
     const teamSetting = settings.find((s) => s.key === 'team')?.value || 'Admin, Sales, Support';
-    const availableTeam = teamSetting.split(',').map((s) => s.trim()).filter(Boolean);
+    const availableTeamStrings = teamSetting.split(',').map((s) => s.trim()).filter(Boolean);
 
     const now = new Date();
 
@@ -97,41 +108,56 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
         })
         .filter(group => group.customReminders.length > 0 || group.attentionReminder !== null);
 
-    // Initial filtering based on permissions
+    // Initial filtering based on visibility (Admin sees all, User sees self + team)
     let filteredReminders = allReminders.filter(g => {
         if (isAdmin) return true;
         if (!userDetails) return false;
 
         const partnerKP = g.partner.key_person_id?.toLowerCase();
-        const meKP = userKP?.toLowerCase();
+        const partnerOwnerId = g.partner.owner_id;
 
-        const isPersonal = meKP && partnerKP === meKP;
-        const assignedToTeamMember = partnerKP && Array.from(teamKPs).some(tkp => tkp.toLowerCase() === partnerKP);
-        const ownedByTeamMember = g.partner.owner_id && teamMemberIds.has(g.partner.owner_id);
+        const isAssignedToMeOrTeam = partnerKP && teamKPs.has(partnerKP);
+        const isOwnedByMeOrTeam = partnerOwnerId && teamUserIds.has(partnerOwnerId);
 
-        return isPersonal || assignedToTeamMember || ownedByTeamMember;
+        return isAssignedToMeOrTeam || isOwnedByMeOrTeam;
     });
 
-    // Apply the dropdown filter
+    // Apply the dropdown filter (Hierarchy: Match KP string OR Ownership by user linked to that KP)
     if (owner) {
-        filteredReminders = filteredReminders.filter(g => g.partner.key_person_id === owner);
+        const ownerLower = owner.toLowerCase();
+        const linkedUserIds = (kpToUsers[ownerLower] || []).map(u => u.id);
+
+        filteredReminders = filteredReminders.filter(g => {
+            const partnerKP = g.partner.key_person_id?.toLowerCase();
+            const partnerOwnerId = g.partner.owner_id;
+
+            const matchesKP = partnerKP === ownerLower;
+            const matchesOwnerHierarchy = partnerOwnerId && linkedUserIds.includes(partnerOwnerId);
+
+            return matchesKP || matchesOwnerHierarchy;
+        });
     }
 
-    // Split into categories
+    // Split into categories (Personal vs Team)
     const personalReminders = filteredReminders.filter(g => {
-        const isKP = userKP && g.partner.key_person_id === userKP;
-        const isOwnerAndUnassigned = g.partner.owner_id === userDetails?.id && !g.partner.key_person_id;
-        return isKP || isOwnerAndUnassigned;
+        const partnerKP = g.partner.key_person_id?.toLowerCase();
+        const partnerOwnerId = g.partner.owner_id;
+
+        const isMyKP = partnerKP && userKP && partnerKP === userKP;
+        const isMyOwnership = partnerOwnerId === userDetails?.id;
+
+        return isMyKP || isMyOwnership;
     });
 
     const teamReminders = filteredReminders.filter(g => {
-        const isKP = userKP && g.partner.key_person_id === userKP;
-        const isOwnerAndUnassigned = g.partner.owner_id === userDetails?.id && !g.partner.key_person_id;
-        // If it's in personal, don't show in team
-        if (isKP || isOwnerAndUnassigned) return false;
+        const partnerKP = g.partner.key_person_id?.toLowerCase();
+        const partnerOwnerId = g.partner.owner_id;
 
-        // Everything else that passed the visibility filter goes to team
-        return true;
+        const isMyKP = partnerKP && userKP && partnerKP === userKP;
+        const isMyOwnership = partnerOwnerId === userDetails?.id;
+
+        // If it's in personal, don't show in team section
+        return !(isMyKP || isMyOwnership);
     });
 
     const sortFn = (a: any, b: any) => {
@@ -144,6 +170,11 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
     personalReminders.sort(sortFn);
     teamReminders.sort(sortFn);
 
+    // Prepare dropdown options for the filter
+    const filterOptions = isAdmin
+        ? Array.from(new Set([...availableTeamStrings, ...allUsers.map(u => u.linked_key_person || u.name)])).filter(Boolean).sort()
+        : Array.from(new Set([...allUsers.filter(u => teamUserIds.has(u.id)).map(u => u.linked_key_person || u.name)])).filter(Boolean).sort();
+
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -151,7 +182,7 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
                     <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">{dict.reminders.title}</h1>
                     <p className="text-slate-500 dark:text-slate-400 mt-2">{dict.reminders.subtitle}</p>
                 </div>
-                <ReminderFilter availableTeam={Array.from(teamKPs).sort()} initialOwner={owner} dict={dict} />
+                <ReminderFilter availableTeam={filterOptions} initialOwner={owner} dict={dict} />
             </div>
 
             {/* Personal Reminders */}
