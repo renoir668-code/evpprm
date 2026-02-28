@@ -28,12 +28,7 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
             if (!nameToUserIds[nameLower]) nameToUserIds[nameLower] = [];
             nameToUserIds[nameLower].push(u.id);
         }
-        // Also support the legacy linked_key_person for backward compatibility
-        const legacyKP = (u.linked_key_person || '').toLowerCase();
-        if (legacyKP && legacyKP !== nameLower) {
-            if (!nameToUserIds[legacyKP]) nameToUserIds[legacyKP] = [];
-            nameToUserIds[legacyKP].push(u.id);
-        }
+
     });
 
     // Get workgroup context (Users and their names)
@@ -51,8 +46,7 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
                 if (u) {
                     const nameLower = (u.name || '').toLowerCase();
                     if (nameLower) teamNames.add(nameLower);
-                    const legacyKP = (u.linked_key_person || '').toLowerCase();
-                    if (legacyKP) teamNames.add(legacyKP);
+
                 }
             }
         }

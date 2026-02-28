@@ -10,7 +10,7 @@ export default async function Dashboard() {
   const dict = await getDict();
   const allPartners = await getPartners();
   const userDetails = await getCurrentUserDetails();
-  const userKP = userDetails?.linked_key_person;
+  const userKP = userDetails?.name;
   const isAdmin = userDetails?.role === 'Admin';
 
   const allUsers = await getUsers();
@@ -20,7 +20,7 @@ export default async function Dashboard() {
       for (const memberId of wg.member_ids) {
         const u = allUsers.find(x => x.id === memberId);
         if (u) {
-          const kp = u.linked_key_person || u.name;
+          const kp = u.name;
           if (kp) teamKPs.add(kp);
         }
       }

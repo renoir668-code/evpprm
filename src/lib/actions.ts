@@ -458,12 +458,12 @@ export async function setSetting(key: string, value: string) {
 // --- USERS ---
 
 export async function getUsers(): Promise<User[]> {
-    const res = await query('SELECT id, name, email, role, created_at, linked_key_person FROM users');
+    const res = await query('SELECT id, name, email, role, created_at FROM users');
     return res.rows.map((row: any) => ({ ...row, created_at: new Date(row.created_at).toISOString() })) as User[];
 }
 
 export async function getUser(id: string): Promise<User | undefined> {
-    const res = await query('SELECT id, name, email, role, created_at, linked_key_person FROM users WHERE id = $1', [id]);
+    const res = await query('SELECT id, name, email, role, created_at FROM users WHERE id = $1', [id]);
     if (!res.rows[0]) return undefined;
     const row: any = res.rows[0];
     return { ...row, created_at: new Date(row.created_at).toISOString() } as User;
@@ -478,7 +478,7 @@ export async function createUser(data: Omit<User, 'id' | 'created_at' | 'passwor
     if (data.password) {
         hash = await bcrypt.hash(data.password, 10);
     }
-    await query('INSERT INTO users (id, name, email, role, password_hash, linked_key_person) VALUES ($1, $2, $3, $4, $5, $6)', [id, data.name, data.email, data.role, hash, data.linked_key_person || null]);
+    await query('INSERT INTO users (id, name, email, role, password_hash) VALUES ($1, $2, $3, $4, $5)', [id, data.name, data.email, data.role, hash]);
     revalidatePath('/settings');
 }
 
@@ -489,9 +489,8 @@ export async function updateUser(id: string, data: Partial<User>) {
     const name = data.name ?? current.name;
     const email = data.email ?? current.email;
     const role = data.role ?? current.role;
-    const linked_key_person = data.hasOwnProperty('linked_key_person') ? data.linked_key_person : current.linked_key_person;
 
-    await query('UPDATE users SET name = $1, email = $2, role = $3, linked_key_person = $4 WHERE id = $5', [name, email, role, linked_key_person || null, id]);
+    await query('UPDATE users SET name = $1, email = $2, role = $3 WHERE id = $4', [name, email, role, id]);
     revalidatePath('/settings');
 }
 

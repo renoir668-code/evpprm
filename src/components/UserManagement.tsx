@@ -21,7 +21,6 @@ export default function UserManagement({
     const [email, setEmail] = useState('');
     const [role, setRole] = useState('User');
     const [password, setPassword] = useState('');
-    const [linkedKP, setLinkedKP] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // User Edit State
@@ -29,7 +28,6 @@ export default function UserManagement({
     const [editName, setEditName] = useState('');
     const [editEmail, setEditEmail] = useState('');
     const [editRole, setEditRole] = useState('');
-    const [editLinkedKP, setEditLinkedKP] = useState('');
 
     // Workgroup State
     const [newGroupName, setNewGroupName] = useState('');
@@ -43,12 +41,11 @@ export default function UserManagement({
         if (!name || !email || !password) return;
         setIsSubmitting(true);
         try {
-            await createUser({ name, email, role, password, linked_key_person: linkedKP || null });
+            await createUser({ name, email, role, password });
             setName('');
             setEmail('');
             setPassword('');
             setRole('User');
-            setLinkedKP('');
         } catch (err) {
             console.error(err);
         } finally {
@@ -67,14 +64,13 @@ export default function UserManagement({
         setEditName(user.name);
         setEditEmail(user.email);
         setEditRole(user.role);
-        setEditLinkedKP(user.linked_key_person || '');
     };
 
     const handleUpdate = async (id: string) => {
         if (!editName || !editEmail) return;
         setIsSubmitting(true);
         try {
-            await updateUser(id, { name: editName, email: editEmail, role: editRole as any, linked_key_person: editLinkedKP || null });
+            await updateUser(id, { name: editName, email: editEmail, role: editRole as any });
             setEditingUserId(null);
         } catch (err) {
             console.error(err);
@@ -154,20 +150,7 @@ export default function UserManagement({
                             <label htmlFor="username-email" className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5 ml-1">{dict.settings.usernameEmail}</label>
                             <input id="username-email" required type="text" placeholder="john.doe" value={email} onChange={e => setEmail(e.target.value)} className="w-full px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-4 focus:ring-indigo-500/10 dark:focus:ring-indigo-500/30 focus:border-indigo-500 text-sm font-medium transition-all shadow-sm" title={dict.settings.usernameEmail} />
                         </div>
-                        <div>
-                            <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5 ml-1">{dict.settings.linkKeyPerson}</label>
-                            <select
-                                value={linkedKP}
-                                onChange={e => setLinkedKP(e.target.value)}
-                                title={dict.settings.linkKeyPerson}
-                                className="w-full px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-4 focus:ring-indigo-500/10 dark:focus:ring-indigo-500/30 focus:border-indigo-500 text-sm font-bold bg-white dark:bg-slate-800 cursor-pointer shadow-sm"
-                            >
-                                <option value="">{dict.common.none}</option>
-                                {keyPeople.map(kp => (
-                                    <option key={kp} value={kp}>{kp}</option>
-                                ))}
-                            </select>
-                        </div>
+
                         <div>
                             <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5 ml-1">{dict.settings.role}</label>
                             <select
@@ -215,17 +198,7 @@ export default function UserManagement({
                                         title="Edit Username / Email"
                                         className="px-3 py-1.5 border border-indigo-200 rounded-lg text-sm text-slate-600 dark:text-slate-300 focus:ring-4 focus:ring-indigo-500/10 dark:focus:ring-indigo-500/30 outline-none"
                                     />
-                                    <select
-                                        value={editLinkedKP}
-                                        onChange={e => setEditLinkedKP(e.target.value)}
-                                        title={dict.settings.linkKeyPerson}
-                                        className="px-3 py-1.5 border border-indigo-200 rounded-lg text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 dark:focus:ring-indigo-500/30 outline-none bg-white dark:bg-slate-800 font-medium"
-                                    >
-                                        <option value="">{dict.common.none}</option>
-                                        {keyPeople.map(kp => (
-                                            <option key={kp} value={kp}>{kp}</option>
-                                        ))}
-                                    </select>
+
                                     <select
                                         value={editRole}
                                         onChange={e => setEditRole(e.target.value)}
@@ -249,12 +222,7 @@ export default function UserManagement({
                                         )}>
                                             {u.role}
                                         </span>
-                                        {u.linked_key_person && (
-                                            <span className="flex items-center gap-1 text-[9px] font-bold text-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded-md border border-indigo-100">
-                                                <LinkIcon className="w-2.5 h-2.5" />
-                                                {u.linked_key_person}
-                                            </span>
-                                        )}
+
                                     </div>
                                     <div className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2 mt-1 px-1">
                                         {u.email}

@@ -29,7 +29,6 @@ export interface User {
     role: string;
     password_hash?: string;
     created_at?: string;
-    linked_key_person?: string | null;
 }
 
 export interface Workgroup {

@@ -48,8 +48,7 @@ export async function initDb(): Promise<void> {
         email TEXT UNIQUE NOT NULL,
         role TEXT DEFAULT 'User',
         password_hash TEXT NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        linked_key_person TEXT
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
@@ -93,9 +92,6 @@ export async function initDb(): Promise<void> {
     } catch (e) { }
     try {
       sqliteDb.exec('ALTER TABLE partners ADD COLUMN dismissed_at DATETIME');
-    } catch (e) { }
-    try {
-      sqliteDb.exec('ALTER TABLE users ADD COLUMN linked_key_person TEXT');
     } catch (e) { }
 
     sqliteDb.exec(`
@@ -198,8 +194,7 @@ export async function initDb(): Promise<void> {
         email TEXT UNIQUE NOT NULL,
         role TEXT DEFAULT 'User',
         password_hash TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        linked_key_person TEXT
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
@@ -242,9 +237,6 @@ export async function initDb(): Promise<void> {
       await client.query('ALTER TABLE partners ADD COLUMN IF NOT EXISTS dismissed_at TIMESTAMP');
     } catch (e) { }
 
-    try {
-      await client.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS linked_key_person TEXT');
-    } catch (e) { }
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS tags (
