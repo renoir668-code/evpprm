@@ -72,8 +72,14 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
             let status: 'overdue' | 'upcoming' | 'good' = 'good';
             if (daysSinceLastTouch === 'Never' || daysSinceLastTouch > p.needs_attention_days) {
                 status = 'overdue';
-            } else if (daysSinceLastTouch > 0 && p.needs_attention_days - daysSinceLastTouch <= 7) {
-                status = 'upcoming';
+            } else if (daysSinceLastTouch >= 0 && (p.needs_attention_days - (daysSinceLastTouch as number)) <= 7) {
+                // If we've touched it today, but the threshold is very low (e.g. 7 days or less), 
+                // it might show as upcoming. Usually users want 0 days ago to be "clean".
+                if (daysSinceLastTouch === 0 && p.needs_attention_days > 0) {
+                    status = 'good';
+                } else {
+                    status = 'upcoming';
+                }
             }
 
             const attentionReminder = status !== 'good' ? {
