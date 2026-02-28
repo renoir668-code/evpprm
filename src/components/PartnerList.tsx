@@ -125,14 +125,14 @@ export default function PartnerList({
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row gap-5 justify-between">
-                <div className="flex bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-2xl overflow-hidden shadow-md focus-within:ring-4 focus-within:ring-indigo-500/30 focus-within:border-indigo-500 transition-all flex-1 max-w-2xl relative z-10 min-h-[52px]">
-                    <div className="pl-5 flex items-center justify-center bg-slate-50 dark:bg-slate-900/50 border-r border-slate-100 dark:border-slate-700/50">
-                        <Search className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />
+            <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+                <div className="w-full md:max-w-xl flex items-center bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 rounded-2xl p-1.5 focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-500/10 transition-all shadow-sm">
+                    <div className="px-3 flex items-center justify-center">
+                        <Search className="w-5 h-5 text-slate-400 dark:text-slate-500" />
                     </div>
                     <input
                         type="text"
-                        className="w-full py-3.5 px-4 outline-none text-slate-800 dark:text-slate-100 bg-transparent placeholder:text-slate-400 font-semibold text-base"
+                        className="flex-1 py-2 px-1 outline-none text-slate-800 dark:text-slate-100 bg-transparent placeholder:text-slate-400 font-medium text-lg"
                         placeholder={dict.directory.searchPlaceholder || "Search..."}
                         title={dict.directory.searchPlaceholder || "Search"}
                         value={searchQuery}
@@ -141,7 +141,7 @@ export default function PartnerList({
                     {searchQuery && (
                         <button
                             onClick={() => setSearchQuery('')}
-                            className="px-4 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-indigo-600 transition-colors"
+                            className="px-3 flex items-center justify-center text-slate-400 hover:text-indigo-600 transition-colors"
                             title={dict.common.clear}
                         >
                             <X className="w-5 h-5" />

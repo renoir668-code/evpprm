@@ -102,8 +102,11 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
         if (isAdmin) return true;
         if (!userDetails) return false;
 
-        const isPersonal = userKP && g.partner.key_person_id === userKP;
-        const assignedToTeamMember = g.partner.key_person_id && teamKPs.has(g.partner.key_person_id);
+        const partnerKP = g.partner.key_person_id?.toLowerCase();
+        const meKP = userKP?.toLowerCase();
+
+        const isPersonal = meKP && partnerKP === meKP;
+        const assignedToTeamMember = partnerKP && Array.from(teamKPs).some(tkp => tkp.toLowerCase() === partnerKP);
         const ownedByTeamMember = g.partner.owner_id && teamMemberIds.has(g.partner.owner_id);
 
         return isPersonal || assignedToTeamMember || ownedByTeamMember;
