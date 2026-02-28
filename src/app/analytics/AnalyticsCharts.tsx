@@ -138,12 +138,12 @@ export function AnalyticsCharts({
 
     // Integrations by Product
     const integrationsByProductData = useMemo(() => {
-        const productCounts: Record<string, number> = {};
+        const productCounts: Record<string, { Finished: number, 'In Pipeline': number }> = {};
 
         // Initialize with all available products from settings
         availableProducts.forEach((p: string) => {
             if (p) {
-                productCounts[p] = 0;
+                productCounts[p] = { Finished: 0, 'In Pipeline': 0 };
             }
         });
 
@@ -151,15 +151,17 @@ export function AnalyticsCharts({
             let prods = parseProducts(p.integration_products);
 
             prods.forEach(prod => {
-                if (prod.status === 'Finished') {
-                    productCounts[prod.product] = (productCounts[prod.product] || 0) + 1;
+                if (!productCounts[prod.product]) {
+                    productCounts[prod.product] = { Finished: 0, 'In Pipeline': 0 };
                 }
+                if (prod.status === 'Finished') productCounts[prod.product].Finished++;
+                if (prod.status === 'In pipeline' || prod.status === 'In development') productCounts[prod.product]['In Pipeline']++;
             });
         });
 
         return Object.entries(productCounts)
-            .map(([name, count]) => ({ name, count }))
-            .sort((a, b) => b.count - a.count);
+            .map(([name, counts]) => ({ name, Finished: counts.Finished, 'In Pipeline': counts['In Pipeline'] }))
+            .sort((a, b) => (b.Finished + b['In Pipeline']) - (a.Finished + a['In Pipeline']));
     }, [filteredPartners, availableProducts]);
 
     // Team Performance: Partner Assignment
@@ -300,6 +302,7 @@ export function AnalyticsCharts({
                                     />
                                     <YAxis
                                         hide
+                                        domain={[0, (dataMax: number) => Math.max(dataMax, 1)]}
                                     />
                                     <Tooltip
                                         cursor={{ fill: 'rgba(241, 245, 249, 0.5)' }}
@@ -325,7 +328,7 @@ export function AnalyticsCharts({
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={integrationsByVerticalData} layout="vertical" margin={{ top: 0, right: 0, left: 30, bottom: 0 }}>
                                 <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e2e8f0" />
-                                <XAxis type="number" hide />
+                                <XAxis type="number" hide domain={[0, (dataMax: number) => Math.max(dataMax, 1)]} />
                                 <YAxis dataKey="name" type="category" tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }} tickLine={false} axisLine={false} />
                                 <Tooltip cursor={{ fill: 'rgba(241, 245, 249, 0.5)' }} contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 4px 20px -2px rgba(0,0,0,0.1)' }} />
                                 <Bar dataKey="Finished" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} maxBarSize={30} />
@@ -342,14 +345,13 @@ export function AnalyticsCharts({
                     </h3>
                     <div className="h-72 w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={integrationsByProductData}>
+                            <BarChart data={integrationsByProductData} margin={{ top: 10, right: 10, left: 10, bottom: 40 }}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                                <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }} tickLine={false} axisLine={false} />
-                                <YAxis hide />
+                                <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 11, fontWeight: 600 }} tickLine={false} axisLine={false} angle={-35} textAnchor="end" height={60} />
+                                <YAxis hide domain={[0, (dataMax: number) => Math.max(dataMax, 1)]} />
                                 <Tooltip cursor={{ fill: 'rgba(241, 245, 249, 0.5)' }} contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 4px 20px -2px rgba(0,0,0,0.1)' }} />
-                                <Bar dataKey="count" fill="#d946ef" radius={[6, 6, 0, 0]} maxBarSize={40}>
-                                    <LabelList dataKey="count" position="top" fill="#d946ef" fontSize={12} fontWeight={700} />
-                                </Bar>
+                                <Bar dataKey="Finished" stackId="a" fill="#d946ef" radius={[0, 0, 0, 0]} maxBarSize={40} />
+                                <Bar dataKey="In Pipeline" stackId="a" fill="#f472b6" radius={[6, 6, 0, 0]} maxBarSize={40} />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
@@ -364,7 +366,7 @@ export function AnalyticsCharts({
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={assignmentData} layout="vertical" margin={{ top: 0, right: 0, left: 30, bottom: 0 }}>
                                 <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e2e8f0" />
-                                <XAxis type="number" hide />
+                                <XAxis type="number" hide domain={[0, (dataMax: number) => Math.max(dataMax, 1)]} />
                                 <YAxis dataKey="name" type="category" tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }} tickLine={false} axisLine={false} />
                                 <Tooltip cursor={{ fill: 'rgba(241, 245, 249, 0.5)' }} contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 4px 20px -2px rgba(0,0,0,0.1)' }} />
                                 <Bar dataKey="count" name={dict.analytics.partnersAssigned} fill="#3b82f6" radius={[0, 6, 6, 0]} maxBarSize={30}>
