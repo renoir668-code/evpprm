@@ -140,8 +140,12 @@ export default async function Dashboard() {
                 const partner = partners.find(p => p.id === app.partner_id);
                 return (
                   <div key={app.id} className="px-6 py-4 flex items-center gap-4 hover:bg-white/50 dark:hover:bg-slate-800/50 transition-colors">
-                    <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 flex items-center justify-center shrink-0">
-                      <span className="text-indigo-600 font-bold text-sm">{partner ? partner.name.charAt(0).toUpperCase() : '?'}</span>
+                    <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800/50 flex items-center justify-center shrink-0 overflow-hidden">
+                      {partner && partner.logo_url ? (
+                        <img src={partner.logo_url} alt={partner.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-indigo-600 font-bold text-sm">{partner ? partner.name.charAt(0).toUpperCase() : '?'}</span>
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-slate-800 dark:text-slate-100 font-bold truncate">{app.title}</p>
