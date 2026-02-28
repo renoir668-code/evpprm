@@ -72,7 +72,7 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
             let status: 'overdue' | 'upcoming' | 'good' = 'good';
             if (daysSinceLastTouch === 'Never' || daysSinceLastTouch > p.needs_attention_days) {
                 status = 'overdue';
-            } else if (p.needs_attention_days - daysSinceLastTouch <= 7) {
+            } else if (daysSinceLastTouch > 0 && p.needs_attention_days - daysSinceLastTouch <= 7) {
                 status = 'upcoming';
             }
 

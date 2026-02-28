@@ -36,26 +36,29 @@ export function PartnerReminderGroup({ group, dict }: { group: GroupedReminder, 
     }
 
     return (
-        <div className="border-b border-slate-100 dark:border-slate-800 last:border-0">
-            <div
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="p-6 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer group"
-            >
-                <div className="flex items-center gap-4">
-                    <div className={cn(
-                        "w-12 h-12 rounded-xl border border-indigo-100 flex items-center justify-center shrink-0 overflow-hidden",
-                        hasUrgent ? "bg-amber-100 text-amber-600 border-amber-200" : "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600"
-                    )}>
+        <div className="border-b border-slate-100 dark:border-slate-800 last:border-0 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+            <div className="p-6 flex items-center justify-between group relative">
+                <div className="flex items-center gap-4 flex-1">
+                    <Link
+                        href={`/partners/${partner.id}`}
+                        className={cn(
+                            "w-12 h-12 rounded-xl border border-indigo-100 flex items-center justify-center shrink-0 overflow-hidden hover:scale-105 transition-transform shadow-sm",
+                            hasUrgent ? "bg-amber-100 text-amber-600 border-amber-200" : "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600"
+                        )}
+                    >
                         {partner.logo_url ? (
                             <img src={partner.logo_url} alt={partner.name} className="w-full h-full object-cover" />
                         ) : (
                             <span className="font-bold text-lg">{partner.name.charAt(0).toUpperCase()}</span>
                         )}
-                    </div>
-                    <div>
-                        <h3 className="text-lg font-semibold text-slate-900 dark:text-white group-hover:text-indigo-600 transition-colors">
+                    </Link>
+                    <div className="flex-1 min-w-0">
+                        <Link
+                            href={`/partners/${partner.id}`}
+                            className="text-lg font-semibold text-slate-900 dark:text-white hover:text-indigo-600 transition-colors truncate block"
+                        >
                             {partner.name}
-                        </h3>
+                        </Link>
                         <div className="flex items-center gap-2 mt-1">
                             <span className={cn(
                                 "text-[10px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider",
@@ -69,18 +72,23 @@ export function PartnerReminderGroup({ group, dict }: { group: GroupedReminder, 
 
                 <div className="flex items-center gap-4">
                     <div className="hidden sm:block text-right">
-                        {attentionReminder && (
-                            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                                {attentionReminder.status === 'overdue' ?
-                                    <span className="text-amber-600 font-bold bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded-md border border-amber-100">{dict.reminders.overdue}</span> :
-                                    <span className="font-bold text-indigo-600">{attentionReminder.daysRemaining} {dict.reminders.upcoming}</span>
-                                }
+                        {customReminders.length > 0 && (
+                            <p className="text-sm font-bold text-indigo-600 mb-1">
+                                {customReminders.length} {dict.reminders.upcoming}
                             </p>
                         )}
+                        {attentionReminder && attentionReminder.status === 'overdue' && (
+                            <span className="text-amber-600 font-bold bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded-md border border-amber-100 text-[10px] uppercase tracking-wider">
+                                {dict.reminders.overdue}
+                            </span>
+                        )}
                     </div>
-                    <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 group-hover:bg-indigo-50 text-slate-400 dark:text-slate-500 group-hover:text-indigo-600 transition-all">
+                    <button
+                        onClick={() => setIsExpanded(!isExpanded)}
+                        className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 text-slate-400 dark:text-slate-500 hover:text-indigo-600 transition-all shadow-sm active:scale-95"
+                    >
                         {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                    </div>
+                    </button>
                 </div>
             </div>
 
