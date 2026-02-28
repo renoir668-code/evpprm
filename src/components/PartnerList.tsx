@@ -125,14 +125,15 @@ export default function PartnerList({
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
-                <div className="w-full md:max-w-xl flex items-center bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 rounded-2xl p-1.5 focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-500/10 transition-all shadow-sm">
+            <div className="flex flex-wrap items-center gap-4 bg-white/40 dark:bg-slate-900/10 p-4 rounded-[24px] border border-white/20 shadow-sm backdrop-blur-sm">
+                {/* Search Bar */}
+                <div className="flex-1 min-w-[300px] flex items-center bg-white dark:bg-slate-950 border-2 border-slate-100 dark:border-slate-800 rounded-xl p-1.5 focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-500/10 transition-all shadow-sm">
                     <div className="px-3 flex items-center justify-center">
                         <Search className="w-5 h-5 text-slate-400 dark:text-slate-500" />
                     </div>
                     <input
                         type="text"
-                        className="flex-1 py-2 px-1 outline-none text-slate-800 dark:text-slate-100 bg-transparent placeholder:text-slate-400 font-medium text-lg"
+                        className="flex-1 py-1.5 px-1 outline-none text-slate-800 dark:text-slate-100 bg-transparent placeholder:text-slate-400 font-medium text-base"
                         placeholder={dict.directory.searchPlaceholder || "Search..."}
                         title={dict.directory.searchPlaceholder || "Search"}
                         value={searchQuery}
@@ -149,9 +150,10 @@ export default function PartnerList({
                     )}
                 </div>
 
-                <div className="flex gap-3 flex-wrap">
+                {/* Filters Group */}
+                <div className="flex flex-wrap items-center gap-2">
                     <select
-                        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 shadow-sm outline-none text-slate-700 dark:text-slate-200 font-medium focus:ring-4 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/40 focus:border-indigo-500 cursor-pointer"
+                        className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl px-4 py-2.5 shadow-sm outline-none text-slate-700 dark:text-slate-200 font-bold text-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 cursor-pointer transition-all"
                         value={selectedStatus}
                         onChange={(e) => setSelectedStatus(e.target.value)}
                         title={dict.directory.allStatuses}
@@ -165,7 +167,7 @@ export default function PartnerList({
                     </select>
 
                     <select
-                        className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white dark:border-slate-800 rounded-xl px-4 py-3 shadow-sm outline-none text-slate-700 dark:text-slate-200 font-medium focus:ring-4 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/40 focus:border-indigo-500 cursor-pointer"
+                        className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl px-4 py-2.5 shadow-sm outline-none text-slate-700 dark:text-slate-200 font-bold text-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 cursor-pointer transition-all"
                         value={selectedVertical}
                         onChange={(e) => setSelectedVertical(e.target.value)}
                         title={dict.directory.allVerticals}
@@ -179,7 +181,7 @@ export default function PartnerList({
                     </select>
 
                     <select
-                        className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white dark:border-slate-800 rounded-xl px-4 py-3 shadow-sm outline-none text-slate-700 dark:text-slate-200 font-medium focus:ring-4 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/40 focus:border-indigo-500 cursor-pointer"
+                        className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl px-4 py-2.5 shadow-sm outline-none text-slate-700 dark:text-slate-200 font-bold text-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 cursor-pointer transition-all"
                         value={selectedProduct}
                         onChange={(e) => setSelectedProduct(e.target.value)}
                         title={dict.directory.allProducts}
@@ -189,7 +191,7 @@ export default function PartnerList({
                     </select>
 
                     <select
-                        className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white dark:border-slate-800 rounded-xl px-4 py-3 shadow-sm outline-none text-slate-700 dark:text-slate-200 font-medium focus:ring-4 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/40 focus:border-indigo-500 cursor-pointer"
+                        className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl px-4 py-2.5 shadow-sm outline-none text-slate-700 dark:text-slate-200 font-bold text-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 cursor-pointer transition-all"
                         value={selectedTeam}
                         onChange={(e) => setSelectedTeam(e.target.value)}
                         title={dict.directory.allTeamMembers}
@@ -197,7 +199,10 @@ export default function PartnerList({
                         <option value="">{dict.directory.allTeamMembers}</option>
                         {availableTeam.map(t => <option key={t} value={t}>{t}</option>)}
                     </select>
+                </div>
 
+                {/* Actions Group */}
+                <div className="flex items-center gap-2 ml-auto">
                     <input
                         type="file"
                         accept=".csv, .xlsx, .xls"
@@ -210,11 +215,11 @@ export default function PartnerList({
                     <div className="relative">
                         <button
                             onClick={() => setIsActionsOpen(!isActionsOpen)}
-                            className="bg-white/60 dark:bg-slate-900/60 hover:bg-white dark:hover:bg-slate-900 text-slate-700 dark:text-slate-200 hover:text-indigo-600 px-4 py-3 rounded-xl flex items-center gap-2 font-bold shadow-sm transition-all border border-white dark:border-slate-800 hover:shadow-md"
+                            className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:text-indigo-600 px-4 py-2.5 rounded-xl flex items-center gap-2 font-bold text-sm shadow-sm transition-all active:scale-95"
                             title={dict.common.more || 'More Actions'}
                         >
-                            <FileSpreadsheet className="w-5 h-5" />
-                            <span className="hidden sm:inline">{dict.directory.manageData || 'Manage Data'}</span>
+                            <FileSpreadsheet className="w-4 h-4" />
+                            <span className="hidden lg:inline">{dict.directory.manageData || 'Manage Data'}</span>
                             <ChevronDown className={cn("w-4 h-4 transition-transform", isActionsOpen && "rotate-180")} />
                         </button>
 
@@ -267,11 +272,10 @@ export default function PartnerList({
 
                     <button
                         onClick={() => setIsCreateModalOpen(true)}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl flex items-center gap-2 font-bold shadow-md shadow-indigo-600/20 transition-all hover:shadow-lg hover:-translate-y-0.5"
-                        title={dict.directory.addPartner}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 font-black text-sm shadow-md shadow-indigo-600/20 transition-all active:scale-95 shrink-0"
                     >
-                        <Plus className="w-5 h-5" />
-                        {dict.directory.addPartner}
+                        <Plus className="w-4 h-4" />
+                        <span>{dict.directory.addPartner}</span>
                     </button>
                 </div>
             </div>

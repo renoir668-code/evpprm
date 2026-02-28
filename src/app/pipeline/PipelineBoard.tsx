@@ -123,8 +123,9 @@ export function PipelineBoard({
     return (
         <div className="flex flex-col h-full space-y-6">
             {/* Header / Filters Section */}
-            <div className="flex flex-col lg:flex-row gap-5 justify-between items-start lg:items-center bg-white/40 dark:bg-slate-900/40 p-4 rounded-3xl border border-white/20">
-                <div className="w-full lg:max-w-md flex items-center bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-2xl p-1.5 focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-500/10 transition-all shadow-sm">
+            <div className="flex flex-wrap items-center gap-4 bg-white/40 dark:bg-slate-900/10 p-4 rounded-[24px] border border-white/20 shadow-sm backdrop-blur-sm">
+                {/* Search Bar */}
+                <div className="flex-1 min-w-[300px] flex items-center bg-white dark:bg-slate-950 border-2 border-slate-100 dark:border-slate-800 rounded-xl p-1.5 focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-500/10 transition-all shadow-sm">
                     <div className="px-3 flex items-center justify-center">
                         <Search className="w-5 h-5 text-slate-400 dark:text-slate-500" />
                     </div>
@@ -147,10 +148,10 @@ export function PipelineBoard({
                     )}
                 </div>
 
-                <div className="flex gap-2 flex-wrap w-full lg:w-auto">
-                    {/* Partner Dropdown */}
+                {/* Filters Group */}
+                <div className="flex flex-wrap items-center gap-2">
                     <select
-                        className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 shadow-sm outline-none text-slate-700 dark:text-slate-200 font-bold text-xs focus:ring-4 focus:ring-indigo-500/20 cursor-pointer flex-1 sm:flex-initial"
+                        className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl px-4 py-2.5 shadow-sm outline-none text-slate-700 dark:text-slate-200 font-bold text-sm focus:ring-4 focus:ring-indigo-500/10 cursor-pointer transition-all"
                         value={selectedPartner}
                         onChange={(e) => setSelectedPartner(e.target.value)}
                         title="Filter by Partner"
@@ -163,9 +164,8 @@ export function PipelineBoard({
                         ))}
                     </select>
 
-                    {/* Vertical Filter */}
                     <select
-                        className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 shadow-sm outline-none text-slate-700 dark:text-slate-200 font-bold text-xs focus:ring-4 focus:ring-indigo-500/20 cursor-pointer flex-1 sm:flex-initial"
+                        className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl px-4 py-2.5 shadow-sm outline-none text-slate-700 dark:text-slate-200 font-bold text-sm focus:ring-4 focus:ring-indigo-500/10 cursor-pointer transition-all"
                         value={selectedVertical}
                         onChange={(e) => setSelectedVertical(e.target.value)}
                         title={dict.directory.allVerticals}
@@ -174,9 +174,8 @@ export function PipelineBoard({
                         {availableVerticals.map(v => <option key={v} value={v}>{v}</option>)}
                     </select>
 
-                    {/* Product Filter */}
                     <select
-                        className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 shadow-sm outline-none text-slate-700 dark:text-slate-200 font-bold text-xs focus:ring-4 focus:ring-indigo-500/20 cursor-pointer flex-1 sm:flex-initial"
+                        className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl px-4 py-2.5 shadow-sm outline-none text-slate-700 dark:text-slate-200 font-bold text-sm focus:ring-4 focus:ring-indigo-500/10 cursor-pointer transition-all"
                         value={selectedProduct}
                         onChange={(e) => setSelectedProduct(e.target.value)}
                         title={dict.directory.allProducts}
@@ -185,9 +184,8 @@ export function PipelineBoard({
                         {availableProducts.map(p => <option key={p} value={p}>{p}</option>)}
                     </select>
 
-                    {/* Team Filter */}
                     <select
-                        className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 shadow-sm outline-none text-slate-700 dark:text-slate-200 font-bold text-xs focus:ring-4 focus:ring-indigo-500/20 cursor-pointer flex-1 sm:flex-initial"
+                        className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl px-4 py-2.5 shadow-sm outline-none text-slate-700 dark:text-slate-200 font-bold text-sm focus:ring-4 focus:ring-indigo-500/10 cursor-pointer transition-all"
                         value={selectedTeam}
                         onChange={(e) => setSelectedTeam(e.target.value)}
                         title={dict.directory.allTeamMembers}
