@@ -15,7 +15,7 @@ export default function LoginPage() {
             <div className="sm:mx-auto sm:w-full sm:max-w-md animate-in fade-in slide-in-from-bottom-8 duration-700">
                 <div className="mx-auto w-16 h-16 bg-white dark:bg-slate-800 rounded-3xl shadow-lg border border-slate-100 dark:border-slate-800 flex items-center justify-center mb-6 relative group">
                     <div className="absolute inset-0 bg-indigo-500/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity blur" />
-                    <Shield className="w-8 h-8 text-indigo-600 relative z-10 block" />
+                    <span className="text-3xl font-bold text-indigo-600 relative z-10 block">U</span>
                 </div>
                 <h2 className="mt-2 text-center text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                     EVP PRM
