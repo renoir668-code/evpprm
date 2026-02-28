@@ -4,6 +4,7 @@ import { Users, AlertTriangle, CheckCircle, ArrowRight, Calendar, MessageSquare,
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { getDict } from '@/lib/i18n';
+import { NeedingAttentionList } from '@/components/NeedingAttentionList';
 
 export default async function Dashboard() {
   const dict = await getDict();
@@ -233,38 +234,7 @@ export default async function Dashboard() {
             <p className="text-base font-medium mt-2 text-slate-500 dark:text-slate-400">{dict.dashboard.noPartnersRequire}</p>
           </div>
         ) : (
-          <div className="divide-y divide-white/40 dark:divide-slate-700/40 bg-white/10 dark:bg-slate-800/10">
-            {needingAttention.map(({ partner, daysSinceLast }) => (
-              <div key={partner.id} className="px-8 py-6 flex items-center justify-between hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all duration-300 group cursor-pointer hover:pl-10">
-                <div className="flex items-center gap-5">
-                  <div className="w-14 h-14 rounded-2xl bg-white/50 dark:bg-slate-800/50 border border-white dark:border-slate-800 shadow-sm flex items-center justify-center shrink-0 overflow-hidden">
-                    {partner.logo_url ? (
-                      <img src={partner.logo_url} alt={partner.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-xl font-bold text-indigo-500">{partner.name.charAt(0).toUpperCase()}</span>
-                    )}
-                  </div>
-                  <div>
-                    <Link href={`/partners/${partner.id}`} className="text-xl font-bold text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 transition-colors drop-shadow-sm">
-                      {partner.name}
-                    </Link>
-                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-2 flex items-center gap-2">
-                      <span>{dict.dashboard.lastInteraction}</span>
-                      <span className="text-amber-600 font-bold bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded-md">{daysSinceLast === 'Never' ? dict.dashboard.never : `${daysSinceLast} ${dict.dashboard.daysAgo}`}</span>
-                      <span className="text-slate-300 mx-1">•</span>
-                      <span>{dict.dashboard.threshold} <span className="text-slate-700 dark:text-slate-200 font-bold">{partner.needs_attention_days} {dict.dashboard.days}</span></span>
-                    </p>
-                  </div>
-                </div>
-                <Link
-                  href={`/partners/${partner.id}`}
-                  className="p-3 bg-white dark:bg-slate-800 shadow-sm text-slate-400 dark:text-slate-500 hover:text-indigo-600 hover:shadow-lg hover:scale-110 rounded-2xl transition-all duration-300 opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0"
-                >
-                  <ArrowRight className="w-6 h-6" />
-                </Link>
-              </div>
-            ))}
-          </div>
+          <NeedingAttentionList items={needingAttention as any} dict={dict} />
         )}
       </div>
     </div>

@@ -142,7 +142,7 @@ export default async function RemindersPage({ searchParams }: { searchParams: Pr
                     <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">{dict.reminders.title}</h1>
                     <p className="text-slate-500 dark:text-slate-400 mt-2">{dict.reminders.subtitle}</p>
                 </div>
-                <ReminderFilter availableTeam={availableTeam} initialOwner={owner} dict={dict} />
+                <ReminderFilter availableTeam={Array.from(teamKPs).sort()} initialOwner={owner} dict={dict} />
             </div>
 
             {/* Personal Reminders */}
