@@ -10,6 +10,8 @@ export default async function AnalyticsPage() {
     const settings = await getSettings();
     const dict = await getDict();
     const availableTeam = parseSetting(settings, 'team', 'Admin, Sales, Support');
+    const availableProducts = parseSetting(settings, 'products', 'API, Dashboard, Integrations');
+    const availableVerticals = parseSetting(settings, 'verticals', 'Music, Gaming, Finance');
 
     // Process top-level metrics
     const totalPartners = partners.length;
@@ -41,7 +43,7 @@ export default async function AnalyticsPage() {
 
             <div className="glass-card rounded-[32px] overflow-hidden p-8 border border-white/60 dark:border-slate-700/60">
                 <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6">{dict.analytics.pipelineEngagement}</h2>
-                <AnalyticsCharts partners={partners} interactions={flatInteractions} availableTeam={availableTeam} dict={dict} />
+                <AnalyticsCharts partners={partners} interactions={flatInteractions} availableTeam={availableTeam} availableProducts={availableProducts} availableVerticals={availableVerticals} dict={dict} />
             </div>
         </div>
     );

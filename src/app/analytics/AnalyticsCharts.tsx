@@ -11,11 +11,15 @@ export function AnalyticsCharts({
     partners,
     interactions,
     availableTeam,
+    availableProducts,
+    availableVerticals,
     dict
 }: {
     partners: Partner[],
     interactions: Interaction[],
     availableTeam: string[],
+    availableProducts: string[],
+    availableVerticals: string[],
     dict: Dictionary
 }) {
     const [timelineDays, setTimelineDays] = useState(14);
@@ -33,14 +37,14 @@ export function AnalyticsCharts({
         });
     }, [partners, selectedTeamMember, selectedPartnerId, selectedVertical]);
 
-    // Available verticals for filter dropdown
-    const availableVerticals = useMemo(() => {
-        const verticals = new Set<string>();
+    // Available verticals for filter dropdown (merged settings + actual data)
+    const filterVerticals = useMemo(() => {
+        const verticals = new Set<string>(availableVerticals);
         partners.forEach(p => {
             if (p.vertical) verticals.add(p.vertical);
         });
-        return Array.from(verticals).sort();
-    }, [partners]);
+        return Array.from(verticals).filter(Boolean).sort();
+    }, [partners, availableVerticals]);
 
     // Filter interactions based on filtered partners
     // And limit to timelineDays for the engagement chart
@@ -98,8 +102,21 @@ export function AnalyticsCharts({
     const integrationsByVerticalData = useMemo(() => {
         const countsByVertical: Record<string, { Finished: number, 'In Pipeline': number }> = {};
 
+        // Initialize with all available verticals from settings
+        availableVerticals.forEach((v: string) => {
+            if (v) {
+                countsByVertical[v] = { Finished: 0, 'In Pipeline': 0 };
+            }
+        });
+
+        // Ensure "Uncategorized" exists as a fallback
+        const uncategorized = dict.analytics.uncategorized;
+        if (!countsByVertical[uncategorized]) {
+            countsByVertical[uncategorized] = { Finished: 0, 'In Pipeline': 0 };
+        }
+
         filteredPartners.forEach(p => {
-            const vertical = p.vertical || dict.analytics.uncategorized;
+            const vertical = p.vertical || uncategorized;
             if (!countsByVertical[vertical]) {
                 countsByVertical[vertical] = { Finished: 0, 'In Pipeline': 0 };
             }
@@ -116,12 +133,19 @@ export function AnalyticsCharts({
             name,
             Finished: counts.Finished,
             'In Pipeline': counts['In Pipeline']
-        })).sort((a, b) => (b.Finished + b['In Pipeline']) - (a.Finished + a['In Pipeline'])).slice(0, 10);
-    }, [filteredPartners, dict.analytics.uncategorized]);
+        })).sort((a, b) => (b.Finished + b['In Pipeline']) - (a.Finished + a['In Pipeline']));
+    }, [filteredPartners, availableVerticals, dict.analytics.uncategorized]);
 
     // Integrations by Product
     const integrationsByProductData = useMemo(() => {
         const productCounts: Record<string, number> = {};
+
+        // Initialize with all available products from settings
+        availableProducts.forEach((p: string) => {
+            if (p) {
+                productCounts[p] = 0;
+            }
+        });
 
         filteredPartners.forEach(p => {
             let prods = parseProducts(p.integration_products);
@@ -133,11 +157,10 @@ export function AnalyticsCharts({
             });
         });
 
-        return Object.entries(productCounts).map(([name, count]) => ({
-            name,
-            count
-        })).sort((a, b) => b.count - a.count).slice(0, 10);
-    }, [filteredPartners]);
+        return Object.entries(productCounts)
+            .map(([name, count]) => ({ name, count }))
+            .sort((a, b) => b.count - a.count);
+    }, [filteredPartners, availableProducts]);
 
     // Team Performance: Partner Assignment
     const assignmentData = useMemo(() => {
@@ -206,7 +229,7 @@ export function AnalyticsCharts({
                     onChange={e => setSelectedVertical(e.target.value)}
                 >
                     <option value="">{dict.analytics.allVerticals}</option>
-                    {availableVerticals.map(v => <option key={v} value={v}>{v}</option>)}
+                    {filterVerticals.map(v => <option key={v} value={v}>{v}</option>)}
                 </select>
             </div>
 
